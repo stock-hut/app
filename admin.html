@@ -6,6 +6,7 @@
 <title>Stockhut — Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</script>
 <style>
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a26;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#e8e8f0;--muted:#6e6e8a;--accent:#7c6fff;--accent2:#4ecdc4;--green:#2ecc8a;--red:#ff5f6d;--amber:#f9a825;--nav-h:56px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -175,9 +176,9 @@ table.admin-table tr:hover td{background:rgba(255,255,255,.02)}
 </div>
 
 <script>
-const SUPABASE_URL='https://wmuywxaglwcfqceppxll.supabase.co';
+const SUPABASE_URL='https://wmuywxaglwcfqceppxll._supa.co';
 const SUPABASE_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndtdXl3eGFnbHdjZnFjZXBweGxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NzM3NTcsImV4cCI6MjA5NDE0OTc1N30.HXNXSEMO6pfODeIqPIVQ1AHNRiK7KsVnSH7TKS_Q3Y0';
-const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
+var _supa=window._supa.createClient(SUPABASE_URL,SUPABASE_ANON);
 const OWNER_EMAIL='brendon.knoetze@gmail.com'; // UPDATE THIS
 
 let currentMethod='email';
@@ -195,7 +196,7 @@ function genCode(){return Math.random().toString(36).substring(2,10).toUpperCase
 function fmtDate(ts){return ts?new Date(ts).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'—';}
 
 async function init(){
-  const {data:{session}}=await supabase.auth.getSession();
+  const {data:{session}}=await _supa.auth.getSession();
   if(!session){window.location.href='login.html';return;}
   if(session.user.email!==OWNER_EMAIL&&session.user.user_metadata?.username!=='brendon'){
     window.location.href='community.html';return;
@@ -209,11 +210,11 @@ async function loadAll(){
 
 async function loadStats(){
   const [{count:members},{count:pending},{count:wl},{count:posts},{count:replies}]=await Promise.all([
-    supabase.from('profiles').select('*',{count:'exact',head:true}),
-    supabase.from('invites').select('*',{count:'exact',head:true}).is('used_at',null),
-    supabase.from('waitlist').select('*',{count:'exact',head:true}),
-    supabase.from('feed_posts').select('*',{count:'exact',head:true}),
-    supabase.from('feed_replies').select('*',{count:'exact',head:true}),
+    _supa.from('profiles').select('*',{count:'exact',head:true}),
+    _supa.from('invites').select('*',{count:'exact',head:true}).is('used_at',null),
+    _supa.from('waitlist').select('*',{count:'exact',head:true}),
+    _supa.from('feed_posts').select('*',{count:'exact',head:true}),
+    _supa.from('feed_replies').select('*',{count:'exact',head:true}),
   ]);
   document.getElementById('stat-members').textContent=members||0;
   document.getElementById('stat-pending').textContent=pending||0;
@@ -223,7 +224,7 @@ async function loadStats(){
 }
 
 async function loadWaitlist(){
-  const {data}=await supabase.from('waitlist').select('*').order('created_at',{ascending:false});
+  const {data}=await _supa.from('waitlist').select('*').order('created_at',{ascending:false});
   const tbody=document.getElementById('waitlist-body');
   document.getElementById('waitlist-count').textContent=data?.length?`(${data.length})`:'';
   if(!data?.length){tbody.innerHTML='<tr class="empty-row"><td colspan="5">No waitlist signups yet</td></tr>';return;}
@@ -237,7 +238,7 @@ async function loadWaitlist(){
 }
 
 async function loadInvites(){
-  const {data}=await supabase.from('invites').select('*').order('created_at',{ascending:false});
+  const {data}=await _supa.from('invites').select('*').order('created_at',{ascending:false});
   const tbody=document.getElementById('invites-body');
   document.getElementById('invites-count').textContent=data?.length?`(${data.length})`:'';
   if(!data?.length){tbody.innerHTML='<tr class="empty-row"><td colspan="5">No invites sent yet</td></tr>';return;}
@@ -257,7 +258,7 @@ async function loadInvites(){
 }
 
 async function loadMembers(){
-  const {data}=await supabase.from('profiles').select('*').order('created_at',{ascending:true});
+  const {data}=await _supa.from('profiles').select('*').order('created_at',{ascending:true});
   const tbody=document.getElementById('members-body');
   if(!data?.length){tbody.innerHTML='<tr class="empty-row"><td colspan="4">No members yet</td></tr>';return;}
   tbody.innerHTML=data.map(m=>`<tr>
@@ -277,8 +278,8 @@ async function sendEmailInvite(){
   const code=genCode();
   const inviteLink=`${window.location.origin}/signup.html?code=${code}`;
   const expires=new Date(Date.now()+7*24*60*60*1000).toISOString();
-  const {data:{session}}=await supabase.auth.getSession();
-  const {error}=await supabase.from('invites').insert({code,email_sent_to:email,created_by:session.user.id,expires_at:expires});
+  const {data:{session}}=await _supa.auth.getSession();
+  const {error}=await _supa.from('invites').insert({code,email_sent_to:email,created_by:session.user.id,expires_at:expires});
   btn.disabled=false;btn.innerHTML='Send Email Invite →';
   if(error){showMsg('invite-error','Failed to create invite. Try again.');return;}
   // Show the link for manual sending (email service would be added via Supabase Edge Functions later)
@@ -293,8 +294,8 @@ async function generateWALink(){
   const code=genCode();
   const inviteLink=`${window.location.origin}/signup.html?code=${code}`;
   const expires=new Date(Date.now()+7*24*60*60*1000).toISOString();
-  const {data:{session}}=await supabase.auth.getSession();
-  await supabase.from('invites').insert({code,created_by:session.user.id,expires_at:expires});
+  const {data:{session}}=await _supa.auth.getSession();
+  await _supa.from('invites').insert({code,created_by:session.user.id,expires_at:expires});
   const msg=`Hey${name?' '+name:''}! 👋\n\nI'd like to invite you to Stockhut — a private community for retail investors where we share ideas, watchlists and research.\n\nYour personal invite link (expires in 7 days):\n${inviteLink}\n\nSee you inside 🏚`;
   lastWALink=msg;
   document.getElementById('wa-link-text').textContent=msg;
@@ -315,7 +316,7 @@ async function inviteFromWaitlist(email,name,wlId){
   document.getElementById('invite-name').value=name;
   setMethod('email');
   await sendEmailInvite();
-  await supabase.from('waitlist').update({invited:true,invited_at:new Date().toISOString()}).eq('id',wlId);
+  await _supa.from('waitlist').update({invited:true,invited_at:new Date().toISOString()}).eq('id',wlId);
   loadWaitlist();
 }
 
