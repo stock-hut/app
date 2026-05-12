@@ -131,15 +131,16 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
 
 <div class="topbar">
   <div class="topbar-brand">
-    <span class="logo">⚡</span>
+    <div style="width:32px;height:32px;background:linear-gradient(135deg,#7c6fff,#4ecdc4);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px">🏚</div>
     <div>
-      <h1>Stocks Dashboard</h1>
-      <div class="tagline">Personal investment command centre</div>
+      <h1>Stockhut<span style="color:#4ecdc4">.io</span></h1>
+      <div class="tagline">Retail investor research &amp; portfolio platform</div>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:8px">
+  <div style="display:flex;align-items:center;gap:10px">
     <span class="live-dot"></span>
     <div class="topbar-date" id="topbar-date">—</div>
+    <div id="user-menu"></div>
   </div>
 </div>
 
@@ -242,10 +243,39 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+const SUPABASE_URL = 'https://wmuywxaglwcfqceppxll.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndtdXl3eGFnbHdjZnFjZXBweGxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NzM3NTcsImV4cCI6MjA5NDE0OTc1N30.HXNXSEMO6pfODeIqPIVQ1AHNRiK7KsVnSH7TKS_Q3Y0';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
 const d = new Date();
 document.getElementById('topbar-date').textContent =
   d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+
+async function checkAuth() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if(!session) { window.location.href = 'login.html'; return; }
+  const user = session.user;
+  const name = user.user_metadata?.full_name || user.email;
+  const initials = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  const userMenu = document.getElementById('user-menu');
+  if(userMenu) {
+    userMenu.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#7c6fff,#4ecdc4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">${initials}</div>
+        <span style="font-size:12px;color:#6e6e8a">${name.split(' ')[0]}</span>
+        <button onclick="signOut()" style="padding:4px 10px;border-radius:4px;font-size:11px;color:#6e6e8a;background:transparent;border:1px solid rgba(255,255,255,0.1);cursor:pointer;font-family:'Syne',sans-serif;" onmouseover="this.style.color='#ff5f6d'" onmouseout="this.style.color='#6e6e8a'">Sign out</button>
+      </div>`;
+  }
+}
+
+async function signOut() {
+  await supabase.auth.signOut();
+  window.location.href = 'login.html';
+}
+
+checkAuth();
 </script>
 </body>
 </html>
