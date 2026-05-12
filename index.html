@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stocks Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a26;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#e8e8f0;--muted:#6e6e8a;
+  --accent:#7c6fff;--accent2:#4ecdc4;
+  --green:#2ecc8a;--red:#ff5f6d;--amber:#f9a825;--blue:#4a9eff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',sans-serif}
+
+/* ── TOP BAR ── */
+.topbar{
+  padding:14px 32px;
+  display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid var(--border);
+  background:var(--bg);
+}
+.topbar-brand{display:flex;align-items:center;gap:10px}
+.topbar-brand .logo{font-size:20px}
+.topbar-brand h1{font-size:16px;font-weight:800;letter-spacing:-0.4px}
+.topbar-brand .tagline{font-size:11px;color:var(--muted);margin-top:1px}
+.topbar-date{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;
+  background:var(--bg3);border:1px solid var(--border2);border-radius:5px;padding:4px 10px}
+
+/* ── HERO ── */
+.hero{
+  padding:56px 32px 40px;
+  text-align:center;
+  background:radial-gradient(ellipse at 50% 0%, rgba(124,111,255,0.12) 0%, transparent 65%);
+  border-bottom:1px solid var(--border);
+}
+.hero-title{
+  font-size:42px;font-weight:800;letter-spacing:-2px;line-height:1.1;margin-bottom:14px;
+  background:linear-gradient(135deg,#e8e8f0 0%,#7c6fff 50%,#4ecdc4 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero-sub{font-size:15px;color:var(--muted);max-width:520px;margin:0 auto 32px;line-height:1.6}
+.hero-stats{
+  display:flex;gap:28px;justify-content:center;flex-wrap:wrap;
+  font-family:'DM Mono',monospace;font-size:13px;
+}
+.hero-stat{display:flex;flex-direction:column;align-items:center;gap:3px}
+.hero-stat .sv{font-size:22px;font-weight:700;letter-spacing:-0.8px}
+.hero-stat .sl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+.sv-green{color:var(--green)}
+.sv-accent{color:var(--accent)}
+.sv-accent2{color:var(--accent2)}
+
+/* ── APP CARDS ── */
+.cards-section{padding:40px 32px}
+.cards-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:20px;text-align:center}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:960px;margin:0 auto}
+
+.app-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:0;overflow:hidden;text-decoration:none;color:inherit;
+  transition:border-color .2s, transform .2s, box-shadow .2s;
+  display:flex;flex-direction:column;
+}
+.app-card:hover{
+  border-color:var(--border2);
+  transform:translateY(-3px);
+  box-shadow:0 12px 40px rgba(0,0,0,0.4);
+}
+.card-accent-bar{height:3px;width:100%}
+.card-body{padding:20px 22px 22px;flex:1;display:flex;flex-direction:column}
+.card-icon{font-size:28px;margin-bottom:12px;line-height:1}
+.card-title{font-size:16px;font-weight:800;letter-spacing:-0.4px;margin-bottom:6px}
+.card-desc{font-size:12px;color:var(--muted);line-height:1.6;flex:1;margin-bottom:16px}
+.card-features{display:flex;flex-direction:column;gap:5px;margin-bottom:18px}
+.card-feature{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted)}
+.card-feature::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.cf-green::before{background:var(--green)}
+.cf-accent::before{background:var(--accent)}
+.cf-blue::before{background:var(--blue)}
+.card-cta{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-radius:8px;
+  font-size:13px;font-weight:700;
+  transition:opacity .15s;
+}
+.card-cta:hover{opacity:.85}
+.cta-arrow{font-size:16px;line-height:1}
+
+/* ── QUICK LINKS ── */
+.quicklinks{
+  display:flex;gap:8px;justify-content:center;flex-wrap:wrap;
+  padding:0 32px 40px;
+}
+.ql{
+  display:flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:6px;
+  border:1px solid var(--border2);background:var(--bg2);
+  font-size:12px;color:var(--muted);text-decoration:none;
+  transition:all .15s;
+}
+.ql:hover{color:var(--text);border-color:var(--accent)}
+.ql-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* ── FOOTER ── */
+.footer{
+  padding:18px 32px;border-top:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;
+}
+.footer-left{font-size:11px;color:var(--muted)}
+.footer-right{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;display:flex;gap:16px}
+.footer-right a{color:var(--muted);text-decoration:none;transition:color .15s}
+.footer-right a:hover{color:var(--text)}
+
+/* ── LIVE DOT ── */
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);
+  animation:pulse 2s infinite;display:inline-block}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+@media(max-width:700px){
+  .cards{grid-template-columns:1fr}
+  .hero-title{font-size:28px}
+  .hero-stats{gap:18px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <span class="logo">⚡</span>
+    <div>
+      <h1>Stocks Dashboard</h1>
+      <div class="tagline">Personal investment command centre</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="live-dot"></span>
+    <div class="topbar-date" id="topbar-date">—</div>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-title">Your Investing<br>Command Centre</div>
+  <div class="hero-sub">Portfolio tracking, live stock screener, and watchlist — all in one place. Prices update live via Yahoo Finance.</div>
+  <div class="hero-stats">
+    <div class="hero-stat"><span class="sv sv-green">£63,620</span><span class="sl">Portfolio Value</span></div>
+    <div class="hero-stat"><span class="sv sv-green">+£19,960</span><span class="sl">Open P&amp;L</span></div>
+    <div class="hero-stat"><span class="sv sv-accent">+45.7%</span><span class="sl">Blended Return</span></div>
+    <div class="hero-stat"><span class="sv sv-accent2">329</span><span class="sl">Closed Trades</span></div>
+    <div class="hero-stat"><span class="sv sv-green">£52,825</span><span class="sl">All-Time P&amp;L</span></div>
+  </div>
+</div>
+
+<div class="cards-section">
+  <div class="cards-title">Choose a tool</div>
+  <div class="cards">
+
+    <!-- PORTFOLIO DASHBOARD -->
+    <a class="app-card" href="portfolio_dashboard.html">
+      <div class="card-accent-bar" style="background:linear-gradient(90deg,#7c6fff,#4ecdc4)"></div>
+      <div class="card-body">
+        <div class="card-icon">📊</div>
+        <div class="card-title">Portfolio Dashboard</div>
+        <div class="card-desc">Full view of your 5 accounts — SIPP US, SIPP UK, Robinhood ISA, Personal ISA, and Kids ISAs for Leif and Lena.</div>
+        <div class="card-features">
+          <div class="card-feature cf-green">Live prices with £/$ currency toggle</div>
+          <div class="card-feature cf-green">Group by Account or Sector</div>
+          <div class="card-feature cf-green">Signals, alerts &amp; earnings calendar</div>
+          <div class="card-feature cf-green">329 closed trades analysis</div>
+          <div class="card-feature cf-green">Leif &amp; Lena Junior ISA view</div>
+        </div>
+        <div class="card-cta" style="background:rgba(124,111,255,0.15);color:#9d8fff">
+          <span>Open Portfolio</span>
+          <span class="cta-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- SCREENER -->
+    <a class="app-card" href="stock_screener.html">
+      <div class="card-accent-bar" style="background:linear-gradient(90deg,#f9a825,#ff8c42)"></div>
+      <div class="card-body">
+        <div class="card-icon">⚡</div>
+        <div class="card-title">Stock Screener</div>
+        <div class="card-desc">Great Earnings Reactions screener based on the speculator.io format — 23 stocks ranked by ER day performance with live data.</div>
+        <div class="card-features">
+          <div class="card-feature cf-accent">Live prices &amp; 1-year sparklines</div>
+          <div class="card-feature cf-accent">Click any stock for full detail modal</div>
+          <div class="card-feature cf-accent">RSI, MACD, moving averages</div>
+          <div class="card-feature cf-accent">1-year chart with 50 &amp; 200 SMA</div>
+          <div class="card-feature cf-accent">Business summary for each stock</div>
+        </div>
+        <div class="card-cta" style="background:rgba(249,168,37,0.12);color:#f9a825">
+          <span>Open Screener</span>
+          <span class="cta-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- WATCHLIST -->
+    <a class="app-card" href="stock_screener.html#watchlist" onclick="sessionStorage.setItem('startTab','watchlist')">
+      <div class="card-accent-bar" style="background:linear-gradient(90deg,#2ecc8a,#4a9eff)"></div>
+      <div class="card-body">
+        <div class="card-icon">📋</div>
+        <div class="card-title">Watchlist</div>
+        <div class="card-desc">Track US, UK and European stocks with position size, entry price, date, and your investment thesis for each holding.</div>
+        <div class="card-features">
+          <div class="card-feature cf-blue">US, UK &amp; European markets</div>
+          <div class="card-feature cf-blue">Record shares, entry price &amp; date</div>
+          <div class="card-feature cf-blue">Live P&amp;L vs your entry price</div>
+          <div class="card-feature cf-blue">Investment thesis per position</div>
+          <div class="card-feature cf-blue">Persists in browser storage</div>
+        </div>
+        <div class="card-cta" style="background:rgba(46,204,138,0.12);color:#2ecc8a">
+          <span>Open Watchlist</span>
+          <span class="cta-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+<div class="quicklinks">
+  <a class="ql" href="portfolio_dashboard.html#holdings"><span class="ql-dot" style="background:#7c6fff"></span>Holdings by Account</a>
+  <a class="ql" href="portfolio_dashboard.html#signals"><span class="ql-dot" style="background:#ff5f6d"></span>Signals &amp; Alerts</a>
+  <a class="ql" href="portfolio_dashboard.html#earnings"><span class="ql-dot" style="background:#f9a825"></span>Earnings Calendar</a>
+  <a class="ql" href="portfolio_dashboard.html#kids"><span class="ql-dot" style="background:#2ecc8a"></span>Leif &amp; Lena</a>
+  <a class="ql" href="stock_screener.html"><span class="ql-dot" style="background:#f9a825"></span>Screener Table</a>
+  <a class="ql" href="stock_screener.html"><span class="ql-dot" style="background:#4a9eff"></span>My Watchlist</a>
+</div>
+
+<div class="footer">
+  <div class="footer-left">Personal investment dashboard &nbsp;·&nbsp; Not financial advice &nbsp;·&nbsp; Prices via Yahoo Finance</div>
+  <div class="footer-right">
+    <a href="portfolio_dashboard.html">Portfolio</a>
+    <a href="stock_screener.html">Screener</a>
+  </div>
+</div>
+
+<script>
+const d = new Date();
+document.getElementById('topbar-date').textContent =
+  d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+</script>
+</body>
+</html>
