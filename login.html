@@ -123,7 +123,7 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 // Redirect if already logged in
 supabase.auth.getSession().then(({data:{session}}) => {
-  if(session) window.location.href = 'index.html';
+  if(session) window.location.href = 'community.html';
 });
 
 function showError(msg) {
@@ -152,7 +152,7 @@ async function signIn() {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   setLoading(false);
   if(error) { showError(error.message); return; }
-  window.location.href = 'index.html';
+  window.location.href = 'community.html';
 }
 
 async function signInWithGoogle() {
