@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stockhut — Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</script>
 <style>
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a26;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#e8e8f0;--muted:#6e6e8a;--accent:#7c6fff;--accent2:#4ecdc4;--green:#2ecc8a;--red:#ff5f6d;--amber:#f9a825;--nav-h:56px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -175,8 +173,9 @@ table.admin-table tr:hover td{background:rgba(255,255,255,.02)}
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL='https://wmuywxaglwcfqceppxll._supa.co';
+const SUPABASE_URL='https://wmuywxaglwcfqceppxll.supabase.co';
 const SUPABASE_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndtdXl3eGFnbHdjZnFjZXBweGxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NzM3NTcsImV4cCI6MjA5NDE0OTc1N30.HXNXSEMO6pfODeIqPIVQ1AHNRiK7KsVnSH7TKS_Q3Y0';
 var _supa=window._supa.createClient(SUPABASE_URL,SUPABASE_ANON);
 const OWNER_EMAIL='brendon.knoetze@gmail.com'; // UPDATE THIS
