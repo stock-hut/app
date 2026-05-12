@@ -6,6 +6,7 @@
 <title>Stockhut — Community Feed</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</script>
 <style>
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a26;--bg4:#22223a;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#e8e8f0;--muted:#6e6e8a;--accent:#7c6fff;--accent2:#4ecdc4;--green:#2ecc8a;--red:#ff5f6d;--amber:#f9a825;--blue:#4a9eff;--nav-h:56px;--bottom-h:60px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -261,9 +262,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
 </nav>
 
 <script>
-const SUPABASE_URL='https://wmuywxaglwcfqceppxll.supabase.co';
+const SUPABASE_URL='https://wmuywxaglwcfqceppxll._supa.co';
 const SUPABASE_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndtdXl3eGFnbHdjZnFjZXBweGxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NzM3NTcsImV4cCI6MjA5NDE0OTc1N30.HXNXSEMO6pfODeIqPIVQ1AHNRiK7KsVnSH7TKS_Q3Y0';
-const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
+var _supa=window._supa.createClient(SUPABASE_URL,SUPABASE_ANON);
 
 const OWNER_EMAIL='brendon.knoetze@gmail.com'; // UPDATE THIS to your real email
 let currentUser=null;
@@ -274,7 +275,7 @@ document.addEventListener('click',e=>{if(!e.target.closest('.topnav-right'))docu
 function toggleComposer(){document.getElementById('composer').classList.toggle('show')}
 
 async function init(){
-  const {data:{session}}=await supabase.auth.getSession();
+  const {data:{session}}=await _supa.auth.getSession();
   if(!session){window.location.href='login.html';return;}
   currentUser=session.user;
   const name=currentUser.user_metadata?.full_name||currentUser.email;
@@ -296,7 +297,7 @@ async function init(){
 }
 
 async function loadFeed(){
-  const {data:posts,error}=await supabase
+  const {data:posts,error}=await _supa
     .from('feed_posts')
     .select('*,profiles(username,full_name)')
     .order('created_at',{ascending:false})
@@ -359,7 +360,7 @@ async function submitPost(){
   const sourceUrl=document.getElementById('post-url').value.trim()||null;
   const sourceType=sourceUrl?(sourceUrl.includes('twitter.com')||sourceUrl.includes('x.com')?'twitter':'news'):'manual';
 
-  const {data,error}=await supabase.from('feed_posts').insert({
+  const {data,error}=await _supa.from('feed_posts').insert({
     user_id:currentUser.id,content,ticker,direction,conviction,
     source_url:sourceUrl,source_type:sourceType
   }).select('*,profiles(username,full_name)').single();
@@ -385,7 +386,7 @@ async function toggleReplies(postId){
 }
 
 async function loadReplies(postId){
-  const {data:replies}=await supabase.from('feed_replies')
+  const {data:replies}=await _supa.from('feed_replies')
     .select('*,profiles(username,full_name)')
     .eq('post_id',postId).order('created_at',{ascending:true});
   const listEl=document.getElementById('replies-list-'+postId);
@@ -400,20 +401,20 @@ async function loadReplies(postId){
 async function submitReply(postId){
   const input=document.getElementById('reply-input-'+postId);
   const content=input.value.trim();if(!content)return;
-  const {error}=await supabase.from('feed_replies').insert({post_id:postId,user_id:currentUser.id,content});
+  const {error}=await _supa.from('feed_replies').insert({post_id:postId,user_id:currentUser.id,content});
   if(!error){input.value='';loadReplies(postId);}
 }
 
 async function deletePost(postId){
   if(!confirm('Delete this post?'))return;
-  await supabase.from('feed_posts').delete().eq('id',postId).eq('user_id',currentUser.id);
+  await _supa.from('feed_posts').delete().eq('id',postId).eq('user_id',currentUser.id);
   document.getElementById('post-'+postId)?.remove();
 }
 
 function copyPostLink(postId){navigator.clipboard?.writeText(window.location.origin+'/community.html#post-'+postId);alert('Link copied!');}
 
 async function loadStats(){
-  const {count}=await supabase.from('profiles').select('*',{count:'exact',head:true});
+  const {count}=await _supa.from('profiles').select('*',{count:'exact',head:true});
   document.getElementById('member-count').textContent=count||1;
 }
 
@@ -424,7 +425,7 @@ function getTimeAgo(ts){
 }
 function escapeHtml(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}
 
-async function signOut(){await supabase.auth.signOut();window.location.href='login.html';}
+async function signOut(){await _supa.auth.signOut();window.location.href='login.html';}
 
 init();
 </script>
