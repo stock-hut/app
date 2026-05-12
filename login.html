@@ -5,21 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stockhut — Sign In</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{
-  --bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a26;
-  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.18);
-  --text:#e8e8f0;--muted:#6e6e8a;
-  --accent:#7c6fff;--accent2:#4ecdc4;
-  --green:#2ecc8a;--red:#ff5f6d;
-}
+:root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a26;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.18);--text:#e8e8f0;--muted:#6e6e8a;--accent:#7c6fff;--accent2:#4ecdc4;--green:#2ecc8a;--red:#ff5f6d}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',sans-serif}
-body{display:flex;flex-direction:column;min-height:100vh;
-  background-image:radial-gradient(ellipse at 50% 0%,rgba(124,111,255,0.15) 0%,transparent 60%)}
-
-/* TOPBAR */
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Syne',sans-serif}
+body{display:flex;flex-direction:column;min-height:100vh;background-image:radial-gradient(ellipse at 50% 0%,rgba(124,111,255,0.15) 0%,transparent 60%)}
 .topbar{padding:16px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
 .brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text)}
 .brand-icon{width:30px;height:30px;background:linear-gradient(135deg,#7c6fff,#4ecdc4);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px}
@@ -27,17 +17,10 @@ body{display:flex;flex-direction:column;min-height:100vh;
 .brand-tld{color:var(--accent2)}
 .topbar-right{font-size:12px;color:var(--muted)}
 .topbar-right a{color:var(--accent);text-decoration:none;font-weight:600}
-.topbar-right a:hover{text-decoration:underline}
-
-/* MAIN */
 .main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px}
-
-/* CARD */
-.card{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:36px 40px;width:100%;max-width:420px;box-shadow:0 24px 60px rgba(0,0,0,0.5)}
+.card{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:36px 40px;width:100%;max-width:400px;box-shadow:0 24px 60px rgba(0,0,0,0.5)}
 .card-title{font-size:22px;font-weight:800;letter-spacing:-0.8px;margin-bottom:6px}
 .card-sub{font-size:13px;color:var(--muted);margin-bottom:28px;line-height:1.5}
-
-/* FORM */
 .field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
 .field label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;font-weight:600}
 .field input{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:border-color .15s;width:100%}
@@ -46,7 +29,7 @@ body{display:flex;flex-direction:column;min-height:100vh;
 .forgot{display:flex;justify-content:flex-end;margin-top:-8px;margin-bottom:16px}
 .forgot a{font-size:11px;color:var(--muted);text-decoration:none;transition:color .15s}
 .forgot a:hover{color:var(--accent)}
-.btn-primary{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s;letter-spacing:-.2px}
+.btn-primary{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s}
 .btn-primary:hover{background:#6a5fe8;transform:translateY(-1px)}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--muted);font-size:12px}
@@ -55,18 +38,14 @@ body{display:flex;flex-direction:column;min-height:100vh;
 .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
 .signup-link{text-align:center;margin-top:20px;font-size:13px;color:var(--muted)}
 .signup-link a{color:var(--accent);text-decoration:none;font-weight:600}
-.signup-link a:hover{text-decoration:underline}
 .error-msg{background:rgba(255,95,109,0.1);border:1px solid rgba(255,95,109,0.3);border-radius:7px;padding:10px 12px;font-size:12px;color:#ff8f9a;margin-bottom:14px;display:none}
 .error-msg.show{display:block}
 .success-msg{background:rgba(46,204,138,0.1);border:1px solid rgba(46,204,138,0.3);border-radius:7px;padding:10px 12px;font-size:12px;color:var(--green);margin-bottom:14px;display:none}
 .success-msg.show{display:block}
-.spinner-inline{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* FOOTER */
 .footer{padding:16px 32px;border-top:1px solid var(--border);text-align:center;font-size:11px;color:var(--muted)}
 .footer a{color:var(--muted);text-decoration:none}
-.footer a:hover{color:var(--text)}
 </style>
 </head>
 <body>
@@ -93,16 +72,22 @@ body{display:flex;flex-direction:column;min-height:100vh;
     </div>
     <div class="field">
       <label>Password</label>
-      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')signIn()">
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter') doSignIn()">
     </div>
     <div class="forgot"><a href="reset.html">Forgot password?</a></div>
 
-    <button class="btn-primary" id="signin-btn" onclick="signIn()">Sign In</button>
+    <button class="btn-primary" id="signin-btn" onclick="doSignIn()">Sign In</button>
 
     <div class="divider">or</div>
 
-    <button class="btn-secondary" onclick="signInWithGoogle()">
-      <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+    <button class="btn-secondary" onclick="doGoogleSignIn()">
+      <svg width="16" height="16" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
       Continue with Google
     </button>
 
@@ -111,56 +96,54 @@ body{display:flex;flex-direction:column;min-height:100vh;
 </div>
 
 <div class="footer">
-  <a href="index.html">Home</a> &nbsp;·&nbsp;
-  Not financial advice &nbsp;·&nbsp;
-  &copy; 2026 Stockhut
+  <a href="index.html">Home</a> &nbsp;·&nbsp; Not financial advice &nbsp;·&nbsp; &copy; 2026 Stockhut
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = 'https://wmuywxaglwcfqceppxll.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndtdXl3eGFnbHdjZnFjZXBweGxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NzM3NTcsImV4cCI6MjA5NDE0OTc1N30.HXNXSEMO6pfODeIqPIVQ1AHNRiK7KsVnSH7TKS_Q3Y0';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+var _supa = window.supabase.createClient(
+  'https://wmuywxaglwcfqceppxll.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndtdXl3eGFnbHdjZnFjZXBweGxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NzM3NTcsImV4cCI6MjA5NDE0OTc1N30.HXNXSEMO6pfODeIqPIVQ1AHNRiK7KsVnSH7TKS_Q3Y0'
+);
 
 // Redirect if already logged in
-supabase.auth.getSession().then(({data:{session}}) => {
-  if(session) window.location.href = 'community.html';
+_supa.auth.getSession().then(function(r){
+  if(r.data && r.data.session) window.location.href = 'community.html';
 });
 
-function showError(msg) {
-  const el = document.getElementById('error-msg');
-  el.textContent = msg;
-  el.classList.add('show');
+function showError(msg){
+  var el = document.getElementById('error-msg');
+  el.textContent = msg; el.classList.add('show');
   document.getElementById('success-msg').classList.remove('show');
 }
-function showSuccess(msg) {
-  const el = document.getElementById('success-msg');
-  el.textContent = msg;
-  el.classList.add('show');
+function showSuccess(msg){
+  var el = document.getElementById('success-msg');
+  el.textContent = msg; el.classList.add('show');
   document.getElementById('error-msg').classList.remove('show');
 }
-function setLoading(loading) {
-  const btn = document.getElementById('signin-btn');
-  btn.disabled = loading;
-  btn.innerHTML = loading ? '<span class="spinner-inline"></span>Signing in...' : 'Sign In';
+function setLoading(on){
+  var btn = document.getElementById('signin-btn');
+  btn.disabled = on;
+  btn.innerHTML = on ? '<span class="spinner"></span>Signing in...' : 'Sign In';
 }
 
-async function signIn() {
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value;
-  if(!email || !password) { showError('Please enter your email and password.'); return; }
+async function doSignIn(){
+  var email    = document.getElementById('email').value.trim();
+  var password = document.getElementById('password').value;
+  if(!email || !password){ showError('Please enter your email and password.'); return; }
   setLoading(true);
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  var result = await _supa.auth.signInWithPassword({ email: email, password: password });
   setLoading(false);
-  if(error) { showError(error.message); return; }
+  if(result.error){ showError(result.error.message); return; }
   window.location.href = 'community.html';
 }
 
-async function signInWithGoogle() {
-  const { error } = await supabase.auth.signInWithOAuth({
+async function doGoogleSignIn(){
+  var result = await _supa.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.origin + '/index.html' }
+    options: { redirectTo: window.location.origin + '/community.html' }
   });
-  if(error) showError(error.message);
+  if(result.error) showError(result.error.message);
 }
 </script>
 </body>
