@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stockhut — Reset Password</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a26;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.18);--text:#e8e8f0;--muted:#6e6e8a;--accent:#7c6fff;--accent2:#4ecdc4;--green:#2ecc8a;--red:#ff5f6d}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',sans-serif}
+body{display:flex;flex-direction:column;min-height:100vh;background-image:radial-gradient(ellipse at 50% 0%,rgba(249,168,37,0.08) 0%,transparent 60%)}
+.topbar{padding:16px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text)}
+.brand-icon{width:30px;height:30px;background:linear-gradient(135deg,#7c6fff,#4ecdc4);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.brand-name{font-size:16px;font-weight:800;letter-spacing:-0.5px}
+.brand-tld{color:var(--accent2)}
+.main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px}
+.card{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:36px 40px;width:100%;max-width:400px;box-shadow:0 24px 60px rgba(0,0,0,0.5)}
+.card-icon{font-size:32px;margin-bottom:14px}
+.card-title{font-size:22px;font-weight:800;letter-spacing:-0.8px;margin-bottom:6px}
+.card-sub{font-size:13px;color:var(--muted);margin-bottom:28px;line-height:1.6}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.field label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;font-weight:600}
+.field input{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:border-color .15s;width:100%}
+.field input:focus{border-color:var(--accent)}
+.field input::placeholder{color:var(--muted)}
+.btn-primary{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s}
+.btn-primary:hover{background:#6a5fe8;transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.back-link{text-align:center;margin-top:18px;font-size:13px;color:var(--muted)}
+.back-link a{color:var(--accent);text-decoration:none;font-weight:600}
+.error-msg{background:rgba(255,95,109,0.1);border:1px solid rgba(255,95,109,0.3);border-radius:7px;padding:10px 12px;font-size:12px;color:#ff8f9a;margin-bottom:14px;display:none}
+.error-msg.show{display:block}
+.success-msg{background:rgba(46,204,138,0.1);border:1px solid rgba(46,204,138,0.3);border-radius:7px;padding:12px 14px;font-size:13px;color:var(--green);margin-bottom:14px;line-height:1.6;display:none}
+.success-msg.show{display:block}
+.spinner-inline{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.footer{padding:16px 32px;border-top:1px solid var(--border);text-align:center;font-size:11px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="brand" href="index.html">
+    <div class="brand-icon">🏚</div>
+    <div class="brand-name">Stockhut<span class="brand-tld">.io</span></div>
+  </a>
+</div>
+
+<div class="main">
+  <div class="card" id="request-card">
+    <div class="card-icon">🔑</div>
+    <div class="card-title">Reset your password</div>
+    <div class="card-sub">Enter your email address and we'll send you a link to reset your password.</div>
+
+    <div class="error-msg" id="error-msg"></div>
+    <div class="success-msg" id="success-msg"></div>
+
+    <div class="field">
+      <label>Email address</label>
+      <input type="email" id="email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')sendReset()">
+    </div>
+
+    <button class="btn-primary" id="reset-btn" onclick="sendReset()">Send Reset Link</button>
+    <div class="back-link"><a href="login.html">← Back to sign in</a></div>
+  </div>
+
+  <!-- New password form — shown after clicking email link -->
+  <div class="card" id="new-password-card" style="display:none">
+    <div class="card-icon">🔒</div>
+    <div class="card-title">Set new password</div>
+    <div class="card-sub">Choose a strong password for your Stockhut account.</div>
+
+    <div class="error-msg" id="error-msg-2"></div>
+
+    <div class="field">
+      <label>New Password</label>
+      <input type="password" id="new-password" placeholder="Min. 8 characters">
+    </div>
+    <div class="field">
+      <label>Confirm New Password</label>
+      <input type="password" id="confirm-new-password" placeholder="Repeat password" onkeydown="if(event.key==='Enter')updatePassword()">
+    </div>
+
+    <button class="btn-primary" id="update-btn" onclick="updatePassword()">Update Password</button>
+  </div>
+</div>
+
+<div class="footer">Not financial advice &nbsp;·&nbsp; &copy; 2026 Stockhut</div>
+
+<script>
+const SUPABASE_URL = 'https://wmuywxaglwcfqceppxll.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndtdXl3eGFnbHdjZnFjZXBweGxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NzM3NTcsImV4cCI6MjA5NDE0OTc1N30.HXNXSEMO6pfODeIqPIVQ1AHNRiK7KsVnSH7TKS_Q3Y0';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// Check if this is a password recovery redirect from email
+supabase.auth.onAuthStateChange((event, session) => {
+  if(event === 'PASSWORD_RECOVERY') {
+    document.getElementById('request-card').style.display = 'none';
+    document.getElementById('new-password-card').style.display = 'block';
+  }
+});
+
+async function sendReset() {
+  const email = document.getElementById('email').value.trim();
+  if(!email) { showError('error-msg', 'Please enter your email address.'); return; }
+  const btn = document.getElementById('reset-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-inline"></span>Sending...';
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/reset.html'
+  });
+  btn.disabled = false;
+  btn.innerHTML = 'Send Reset Link';
+  if(error) { showError('error-msg', error.message); return; }
+  document.getElementById('success-msg').innerHTML = '✅ Reset link sent! Check your email inbox — the link expires in 1 hour.';
+  document.getElementById('success-msg').classList.add('show');
+  document.getElementById('error-msg').classList.remove('show');
+  document.getElementById('email').disabled = true;
+  btn.style.display = 'none';
+}
+
+async function updatePassword() {
+  const newPass = document.getElementById('new-password').value;
+  const confirm = document.getElementById('confirm-new-password').value;
+  if(newPass.length < 8) { showError('error-msg-2','Password must be at least 8 characters.'); return; }
+  if(newPass !== confirm) { showError('error-msg-2','Passwords do not match.'); return; }
+  const btn = document.getElementById('update-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-inline"></span>Updating...';
+  const { error } = await supabase.auth.updateUser({ password: newPass });
+  if(error) { showError('error-msg-2', error.message); btn.disabled=false; btn.innerHTML='Update Password'; return; }
+  btn.innerHTML = '✅ Password updated!';
+  setTimeout(() => window.location.href = 'login.html', 1500);
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.add('show');
+}
+</script>
+</body>
+</html>

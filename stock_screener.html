@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Screener & Watchlist</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg:#0a0a0f; --bg2:#12121a; --bg3:#1a1a26; --bg4:#22223a;
+  --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.13);
+  --text:#e8e8f0; --muted:#6e6e8a; --accent:#7c6fff; --accent2:#4ecdc4;
+  --green:#2ecc8a; --red:#ff5f6d; --amber:#f9a825; --blue:#4a9eff;
+  --orange:#ff8c42; --purple:#c882ff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow-x:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;font-size:13px;line-height:1.5}
+.mono{font-family:'DM Mono',monospace}
+
+/* HEADER */
+.hdr{padding:16px 28px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:100;backdrop-filter:blur(8px)}
+.hdr-left{display:flex;align-items:center;gap:14px}
+.hdr h1{font-size:17px;font-weight:800;letter-spacing:-0.5px}
+.hdr-right{display:flex;gap:8px;align-items:center}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.badge{background:var(--bg3);border:1px solid var(--border2);border-radius:5px;padding:4px 10px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.btn{padding:5px 12px;border-radius:5px;font-size:12px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:'Syne',sans-serif;transition:all .15s;display:flex;align-items:center;gap:5px}
+.btn:hover{color:var(--text);border-color:var(--accent)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:#6a5fe8;color:#fff}
+.btn.spinning svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* NAV TABS */
+.nav{display:flex;padding:0 28px;border-bottom:1px solid var(--border)}
+.tab{padding:11px 16px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;white-space:nowrap}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* LAYOUT */
+.main{padding:20px 28px}
+.page{display:none}
+.page.active{display:block}
+
+/* SCREENER TABLE */
+.screener-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.screener-title{font-size:18px;font-weight:800;letter-spacing:-0.5px}
+.screener-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+table.screener{width:100%;border-collapse:collapse;min-width:900px}
+table.screener thead th{background:var(--bg3);padding:9px 10px;text-align:left;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;font-weight:600;white-space:nowrap;border-bottom:1px solid var(--border2)}
+table.screener thead th.r{text-align:right}
+table.screener tbody tr{cursor:pointer;transition:background .12s}
+table.screener tbody tr:hover{background:rgba(124,111,255,0.06)}
+table.screener tbody tr:hover .sym-cell{color:var(--accent)}
+table.screener tbody td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12px}
+table.screener tbody tr:last-child td{border-bottom:none}
+.sym-cell{font-family:'DM Mono',monospace;font-weight:700;font-size:12px;color:var(--accent2);transition:color .12s}
+.co-cell{font-weight:500;color:var(--text);font-size:12px}
+.r{text-align:right;font-family:'DM Mono',monospace}
+.er-pct{padding:3px 7px;border-radius:4px;font-weight:700;font-size:11px;font-family:'DM Mono',monospace}
+.pct-bar-wrap{display:flex;align-items:center;gap:6px}
+.pct-bar{height:14px;border-radius:3px;min-width:4px;transition:width .3s}
+.up{color:var(--green)}
+.dn{color:var(--red)}
+.neu{color:var(--muted)}
+.tag{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.tag-us{background:rgba(74,158,255,.15);color:#4a9eff}
+.tag-uk{background:rgba(78,205,196,.15);color:#4ecdc4}
+.tag-eu{background:rgba(124,111,255,.15);color:#9d8fff}
+.sma-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin:0 1px}
+.avg-row td{background:var(--bg3);font-weight:600;font-size:11px;color:var(--muted);border-top:1px solid var(--border2) !important}
+
+/* SPARKLINE */
+.spark-wrap{width:80px;height:30px}
+
+/* WATCHLIST */
+.wl-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px}
+.wl-section{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.wl-section-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.wl-section-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px}
+.wl-add-form{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px}
+.wl-add-form .form-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+.wl-add-form .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px}
+.wl-add-form .form-full{margin-bottom:6px}
+.wl-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px}
+.wl-input{width:100%;background:var(--bg4);border:1px solid var(--border2);border-radius:5px;padding:6px 8px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none}
+.wl-input:focus{border-color:var(--accent)}
+.wl-input::placeholder{color:var(--muted)}
+textarea.wl-input{resize:vertical;min-height:52px;font-family:'Syne',sans-serif;font-size:11px;line-height:1.5}
+.wl-item{display:flex;align-items:flex-start;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:8px}
+.wl-item:last-child{border-bottom:none}
+.wl-item-left{display:flex;align-items:flex-start;gap:8px;flex:1;min-width:0;cursor:pointer}
+.wl-item-left:hover .wl-sym{color:var(--accent)}
+.wl-sym{font-family:'DM Mono',monospace;font-weight:700;font-size:13px;color:var(--accent2);transition:color .12s;white-space:nowrap}
+.wl-name{font-size:11px;color:var(--muted)}
+.wl-pos-meta{font-size:10px;color:var(--muted);margin-top:3px;font-family:'DM Mono',monospace;line-height:1.6}
+.wl-thesis-snip{font-size:10px;color:var(--muted);margin-top:3px;font-style:italic;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
+.wl-price{font-family:'DM Mono',monospace;font-size:12px;text-align:right;white-space:nowrap}
+.wl-chg{font-family:'DM Mono',monospace;font-size:11px;text-align:right;white-space:nowrap}
+.wl-pl{font-family:'DM Mono',monospace;font-size:10px;text-align:right;margin-top:2px;white-space:nowrap}
+.wl-actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+.wl-edit{background:none;border:1px solid var(--border2);color:var(--muted);cursor:pointer;font-size:10px;padding:2px 6px;border-radius:3px;transition:all .15s;font-family:'Syne',sans-serif}
+.wl-edit:hover{color:var(--accent);border-color:var(--accent)}
+.wl-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 4px;line-height:1;opacity:.5;transition:opacity .15s}
+.wl-remove:hover{opacity:1;color:var(--red)}
+.wl-empty{font-size:12px;color:var(--muted);text-align:center;padding:16px 0;font-style:italic}
+.wl-loading{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+
+/* POSITION EDIT MODAL */
+.pos-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px}
+.pos-modal-overlay.hidden{display:none}
+.pos-modal{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;width:100%;max-width:420px;padding:0;overflow:hidden;animation:slideIn .18s ease}
+.pos-modal-hdr{padding:16px 18px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.pos-modal-title{font-size:15px;font-weight:700}
+.pos-modal-body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:10px}
+.pos-field{display:flex;flex-direction:column;gap:4px}
+.pos-field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pos-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.pos-input{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;width:100%}
+.pos-input:focus{border-color:var(--accent)}
+.pos-input::placeholder{color:var(--muted)}
+textarea.pos-input{resize:vertical;min-height:72px;font-family:'Syne',sans-serif;font-size:12px;line-height:1.6}
+.pos-modal-footer{display:flex;gap:8px;justify-content:flex-end;padding-top:4px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.modal-overlay.hidden{display:none}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;width:100%;max-width:860px;padding:0;overflow:hidden;animation:slideIn .2s ease}
+@keyframes slideIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.modal-hdr{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start}
+.modal-sym{font-size:24px;font-weight:800;font-family:'DM Mono',monospace;color:var(--accent2);letter-spacing:-1px}
+.modal-co{font-size:13px;color:var(--muted);margin-top:2px}
+.modal-close{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:16px;transition:all .15s}
+.modal-close:hover{color:var(--text);border-color:var(--border2)}
+.modal-body{padding:18px 22px}
+.modal-price-row{display:flex;align-items:baseline;gap:12px;margin-bottom:16px}
+.modal-price{font-size:32px;font-weight:800;font-family:'DM Mono',monospace;letter-spacing:-1.5px}
+.modal-chg{font-size:15px;font-weight:600;font-family:'DM Mono',monospace}
+.modal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.modal-metric{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+.modal-metric .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px}
+.modal-metric .val{font-size:14px;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:-.3px}
+.modal-chart-wrap{position:relative;height:220px;margin-bottom:16px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px}
+.modal-section-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;margin-top:16px}
+.modal-ma-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px}
+.modal-ma{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:9px 10px;text-align:center}
+.modal-ma .ma-lbl{font-size:10px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.modal-ma .ma-val{font-size:13px;font-weight:700;font-family:'DM Mono',monospace}
+.modal-ma .ma-diff{font-size:10px;margin-top:2px;font-family:'DM Mono',monospace}
+.modal-indicators{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.indicator-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.indicator-card .ic-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.indicator-card .ic-value{font-size:20px;font-weight:800;font-family:'DM Mono',monospace;margin-bottom:4px}
+.indicator-card .ic-sub{font-size:11px;color:var(--muted)}
+.rsi-bar{height:8px;background:var(--bg4);border-radius:4px;margin-top:8px;position:relative;overflow:hidden}
+.rsi-fill{height:100%;border-radius:4px;transition:width .5s}
+.modal-summary{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:12px;line-height:1.7;color:var(--muted)}
+.modal-summary strong{color:var(--text)}
+.loading-spinner{display:flex;align-items:center;justify-content:center;height:200px;flex-direction:column;gap:10px;color:var(--muted);font-size:12px}
+.spinner{width:28px;height:28px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+
+/* STATUS BAR */
+#status-bar{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+</style>
+</head>
+<body>
+
+<!-- SITE NAV -->
+<div style="padding:8px 28px;background:#0d0d14;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:space-between">
+  <a href="index.html" style="display:flex;align-items:center;gap:7px;text-decoration:none;color:#6e6e8a;font-size:12px;transition:color .15s" onmouseover="this.style.color='#e8e8f0'" onmouseout="this.style.color='#6e6e8a'">
+    <span style="font-size:14px">⚡</span> Stocks Dashboard
+  </a>
+  <div style="display:flex;gap:4px">
+    <a href="index.html" style="padding:4px 10px;border-radius:4px;font-size:11px;color:#6e6e8a;text-decoration:none;border:1px solid transparent;transition:all .15s" onmouseover="this.style.borderColor='rgba(255,255,255,0.13)';this.style.color='#e8e8f0'" onmouseout="this.style.borderColor='transparent';this.style.color='#6e6e8a'">Home</a>
+    <a href="portfolio_dashboard.html" style="padding:4px 10px;border-radius:4px;font-size:11px;color:#6e6e8a;text-decoration:none;border:1px solid transparent;transition:all .15s" onmouseover="this.style.borderColor='rgba(255,255,255,0.13)';this.style.color='#e8e8f0'" onmouseout="this.style.borderColor='transparent';this.style.color='#6e6e8a'">Portfolio</a>
+    <span style="padding:4px 10px;border-radius:4px;font-size:11px;color:#f9a825;background:rgba(249,168,37,0.1);border:1px solid rgba(249,168,37,0.2)">Screener &amp; Watchlist</span>
+  </div>
+</div>
+
+<div class="hdr">
+  <div class="hdr-left">
+    <h1>⚡ Screener</h1>
+    <div class="badge" id="date-badge">—</div>
+  </div>
+  <div class="hdr-right">
+    <span id="status-bar">—</span>
+    <div class="live-dot" id="live-dot"></div>
+    <button class="btn spinning" onclick="refreshAll()" id="refresh-btn">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 11-9-9c2.5 0 4.7.9 6.4 2.4L21 3v6h-6l2-2"/></svg>
+      Refresh
+    </button>
+  </div>
+</div>
+
+<div class="nav">
+  <div class="tab active" onclick="showPage('screener',this)">Great Earnings Reactions</div>
+  <div class="tab" onclick="showPage('watchlist',this)">Watchlist</div>
+</div>
+
+<!-- ═══ SCREENER PAGE ═══ -->
+<div id="page-screener" class="page active">
+<div class="main">
+  <div class="screener-header">
+    <div>
+      <div class="screener-title">Great Earnings Reactions</div>
+      <div class="screener-meta" id="screener-meta">Click any row to open stock detail &nbsp;·&nbsp; Data from Yahoo Finance</div>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table class="screener" id="screener-table">
+      <thead>
+        <tr>
+          <th>Ticker</th>
+          <th>Company</th>
+          <th class="r">Price</th>
+          <th class="r">% ER Day</th>
+          <th class="r">Mkt Cap</th>
+          <th class="r">P/S</th>
+          <th class="r">P/E</th>
+          <th class="r">% YTD</th>
+          <th>Chart 1Y</th>
+          <th class="r">% 1Y</th>
+          <th class="r">RS Rank</th>
+          <th style="text-align:center">1M</th>
+          <th style="text-align:center">50SMA</th>
+          <th style="text-align:center">200SMA</th>
+        </tr>
+      </thead>
+      <tbody id="screener-body">
+        <tr><td colspan="14" style="text-align:center;padding:40px;color:var(--muted)">
+          <div class="spinner" style="margin:0 auto 10px"></div>Loading prices...
+        </td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ═══ WATCHLIST PAGE ═══ -->
+<div id="page-watchlist" class="page">
+<div class="main">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+    <div>
+      <div style="font-size:18px;font-weight:800;letter-spacing:-.5px">My Watchlist</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">US, UK &amp; European stocks · click any to open detail</div>
+    </div>
+  </div>
+  <div class="wl-grid">
+    <!-- US -->
+    <div class="wl-section">
+      <div class="wl-section-hdr">
+        <div class="wl-section-title"><span class="tag tag-us">🇺🇸 US</span> United States</div>
+        <span class="wl-loading" id="wl-us-status">—</span>
+      </div>
+      <div class="wl-add-form">
+        <div class="form-row-3">
+          <div><div class="wl-label">Ticker</div><input class="wl-input" id="wl-us-sym" placeholder="AAPL" maxlength="10"></div>
+          <div><div class="wl-label">Shares</div><input class="wl-input" id="wl-us-shares" placeholder="100" type="number" min="0"></div>
+          <div><div class="wl-label">Entry Price</div><input class="wl-input" id="wl-us-price" placeholder="150.00" type="number" step="0.01" min="0"></div>
+        </div>
+        <div class="form-row">
+          <div><div class="wl-label">Date Added</div><input class="wl-input" id="wl-us-date" type="date"></div>
+          <div style="display:flex;align-items:flex-end"><button class="btn btn-primary" style="width:100%;justify-content:center" onclick="addToWatchlist('US')">+ Add</button></div>
+        </div>
+        <div class="form-full"><div class="wl-label">Investment Thesis</div><textarea class="wl-input" id="wl-us-thesis" placeholder="Why are you watching this stock?"></textarea></div>
+      </div>
+      <div id="wl-us-list"></div>
+    </div>
+    <!-- UK -->
+    <div class="wl-section">
+      <div class="wl-section-hdr">
+        <div class="wl-section-title"><span class="tag tag-uk">🇬🇧 UK</span> United Kingdom</div>
+        <span class="wl-loading" id="wl-uk-status">—</span>
+      </div>
+      <div class="wl-add-form">
+        <div class="form-row-3">
+          <div><div class="wl-label">Ticker</div><input class="wl-input" id="wl-uk-sym" placeholder="BARC.L" maxlength="12"></div>
+          <div><div class="wl-label">Shares</div><input class="wl-input" id="wl-uk-shares" placeholder="200" type="number" min="0"></div>
+          <div><div class="wl-label">Entry Price</div><input class="wl-input" id="wl-uk-price" placeholder="210.5p" type="number" step="0.01" min="0"></div>
+        </div>
+        <div class="form-row">
+          <div><div class="wl-label">Date Added</div><input class="wl-input" id="wl-uk-date" type="date"></div>
+          <div style="display:flex;align-items:flex-end"><button class="btn btn-primary" style="width:100%;justify-content:center" onclick="addToWatchlist('UK')">+ Add</button></div>
+        </div>
+        <div class="form-full"><div class="wl-label">Investment Thesis</div><textarea class="wl-input" id="wl-uk-thesis" placeholder="Why are you watching this stock?"></textarea></div>
+      </div>
+      <div id="wl-uk-list"></div>
+    </div>
+    <!-- EU -->
+    <div class="wl-section">
+      <div class="wl-section-hdr">
+        <div class="wl-section-title"><span class="tag tag-eu">🇪🇺 EU</span> Europe</div>
+        <span class="wl-loading" id="wl-eu-status">—</span>
+      </div>
+      <div class="wl-add-form">
+        <div class="form-row-3">
+          <div><div class="wl-label">Ticker</div><input class="wl-input" id="wl-eu-sym" placeholder="AIR.PA" maxlength="12"></div>
+          <div><div class="wl-label">Shares</div><input class="wl-input" id="wl-eu-shares" placeholder="50" type="number" min="0"></div>
+          <div><div class="wl-label">Entry Price</div><input class="wl-input" id="wl-eu-price" placeholder="190.00" type="number" step="0.01" min="0"></div>
+        </div>
+        <div class="form-row">
+          <div><div class="wl-label">Date Added</div><input class="wl-input" id="wl-eu-date" type="date"></div>
+          <div style="display:flex;align-items:flex-end"><button class="btn btn-primary" style="width:100%;justify-content:center" onclick="addToWatchlist('EU')">+ Add</button></div>
+        </div>
+        <div class="form-full"><div class="wl-label">Investment Thesis</div><textarea class="wl-input" id="wl-eu-thesis" placeholder="Why are you watching this stock?"></textarea></div>
+      </div>
+      <div id="wl-eu-list"></div>
+    </div>
+  </div>
+
+  <!-- Watchlist performance table -->
+  <div style="font-size:13px;font-weight:700;margin-bottom:10px">All Watchlist Positions</div>
+  <div class="table-wrap">
+    <table class="screener">
+      <thead><tr>
+        <th>Ticker</th><th>Company</th><th>Region</th>
+        <th class="r">Shares</th><th class="r">Entry</th><th class="r">Live Price</th>
+        <th class="r">Daily %</th><th class="r">P&amp;L</th><th class="r">P&amp;L %</th>
+        <th class="r">52W High</th><th class="r">Mkt Cap</th>
+        <th style="text-align:center">vs 50SMA</th><th>Date Added</th><th>Thesis</th>
+      </tr></thead>
+      <tbody id="wl-table-body">
+        <tr><td colspan="14" class="wl-empty">Add stocks to your watchlist above</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ═══ POSITION EDIT MODAL ═══ -->
+<div class="pos-modal-overlay hidden" id="pos-modal-overlay" onclick="closePosModal(event)">
+  <div class="pos-modal">
+    <div class="pos-modal-hdr">
+      <div class="pos-modal-title" id="pos-modal-title">Edit Position</div>
+      <button class="modal-close" onclick="hidePosModal()">✕</button>
+    </div>
+    <div class="pos-modal-body">
+      <input type="hidden" id="pm-region">
+      <input type="hidden" id="pm-idx">
+      <div class="pos-field-row">
+        <div class="pos-field"><div class="pos-lbl">Ticker</div><input class="pos-input" id="pm-sym" readonly style="opacity:.6"></div>
+        <div class="pos-field"><div class="pos-lbl">Date Added</div><input class="pos-input" id="pm-date" type="date"></div>
+      </div>
+      <div class="pos-field-row">
+        <div class="pos-field"><div class="pos-lbl">Shares / Position Size</div><input class="pos-input" id="pm-shares" type="number" min="0" placeholder="e.g. 100"></div>
+        <div class="pos-field"><div class="pos-lbl">Entry Price</div><input class="pos-input" id="pm-entry" type="number" step="0.01" min="0" placeholder="e.g. 150.00"></div>
+      </div>
+      <div class="pos-field"><div class="pos-lbl">Investment Thesis</div><textarea class="pos-input" id="pm-thesis" placeholder="Why are you watching / holding this position? What's your target, stop, catalyst?"></textarea></div>
+      <div class="pos-modal-footer">
+        <button class="btn" onclick="hidePosModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="savePosEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL ═══ -->
+<div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-sym" id="m-sym">—</div>
+        <div class="modal-co" id="m-co">—</div>
+      </div>
+      <button class="modal-close" onclick="hideModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body">
+      <div class="loading-spinner"><div class="spinner"></div>Loading stock data...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── SCREENER DATA (from image, May 9 2026) ── */
+const SCREENER = [
+  {sym:'INOD', co:'Innodata',       erPct:85.91, mktCap:'$2.8B',  ps:9.78,   pe:92.35,  ytd:61.71,  y1:145.09, rs:92},
+  {sym:'BLZE', co:'Backblaze',      erPct:63.58, mktCap:'$449M',  ps:2.99,   pe:null,   ytd:57.81,  y1:43.30,  rs:78},
+  {sym:'STRL', co:'Sterling',       erPct:52.22, mktCap:'$25.9B', ps:8.99,   pe:75.53,  ytd:173.02, y1:375.30, rs:97},
+  {sym:'DOCN', co:'DigitalOcean',   erPct:40.40, mktCap:'$17.1B', ps:18.04,  pe:71.72,  ytd:237.07, y1:462.05, rs:99},
+  {sym:'FLNC', co:'Fluence',        erPct:39.90, mktCap:'$4.5B',  ps:1.72,   pe:null,   ytd:18.66,  y1:427.51, rs:72},
+  {sym:'FLEX', co:'Flex',           erPct:39.71, mktCap:'$52.3B', ps:1.87,   pe:61.07,  ytd:131.40, y1:269.46, rs:94},
+  {sym:'XMTR', co:'Xometry',        erPct:39.18, mktCap:'$4.2B',  ps:5.68,   pe:null,   ytd:32.82,  y1:162.33, rs:85},
+  {sym:'SILC', co:'Silicom',        erPct:37.75, mktCap:'$256M',  ps:3.84,   pe:null,   ytd:202.36, y1:199.33, rs:81},
+  {sym:'HUT',  co:'Hut 8',          erPct:35.31, mktCap:'$11.1B', ps:38.99,  pe:null,   ytd:105.77, y1:608.86, rs:88},
+  {sym:'RKLB', co:'Rocket Lab',     erPct:34.32, mktCap:'$61.0B', ps:89.76,  pe:null,   ytd:49.44,  y1:414.63, rs:95},
+  {sym:'AAON', co:'AAON',           erPct:31.49, mktCap:'$11.4B', ps:7.07,   pe:107.87, ytd:79.49,  y1:39.34,  rs:73},
+  {sym:'DDOG', co:'Datadog',        erPct:31.33, mktCap:'$71.2B', ps:19.40,  pe:497.33, ytd:45.84,  y1:85.54,  rs:82},
+  {sym:'HIMX', co:'Himax',          erPct:30.01, mktCap:'$3.1B',  ps:3.74,   pe:70.69,  ytd:115.11, y1:134.08, rs:76},
+  {sym:'COCO', co:'Vita Coco',      erPct:29.67, mktCap:'$4.1B',  ps:6.21,   pe:51.87,  ytd:35.12,  y1:114.95, rs:79},
+  {sym:'SITM', co:'SiTime',         erPct:27.91, mktCap:'$22.0B', ps:57.88,  pe:null,   ytd:127.89, y1:338.44, rs:91},
+  {sym:'BE',   co:'Bloom Energy',   erPct:27.21, mktCap:'$74.2B', ps:30.32,  pe:null,   ytd:188.21, y1:1381.44,rs:98},
+  {sym:'NXPI', co:'NXP Semi',       erPct:25.55, mktCap:'$74.4B', ps:5.90,   pe:28.20,  ytd:33.61,  y1:53.61,  rs:71},
+  {sym:'SMCI', co:'Supermicro',     erPct:24.54, mktCap:'$21.2B', ps:0.63,   pe:19.27,  ytd:18.06,  y1:10.57,  rs:44},
+  {sym:'TWLO', co:'Twilio',         erPct:23.83, mktCap:'$30.6B', ps:5.77,   pe:312.87, ytd:41.20,  y1:90.84,  rs:80},
+  {sym:'INTC', co:'Intel',          erPct:23.60, mktCap:'$627B',  ps:11.68,  pe:null,   ytd:230.69, y1:483.10, rs:68},
+  {sym:'CIFR', co:'Cipher',         erPct:23.53, mktCap:'$8.4B',  ps:40.05,  pe:null,   ytd:37.27,  y1:589.60, rs:87},
+  {sym:'URI',  co:'United Rentals', erPct:22.92, mktCap:'$58.7B', ps:3.59,   pe:23.93,  ytd:15.59,  y1:39.35,  rs:69},
+  {sym:'JOBY', co:'Joby Aviation',  erPct:21.20, mktCap:'$10.7B', ps:137.66, pe:null,   ytd:-19.18, y1:60.32,  rs:55},
+];
+
+/* ── WATCHLIST STATE — each entry is an object ── */
+function defaultWL(region) {
+  const defaults = {
+    US: [{sym:'AAPL',shares:'',entry:'',date:'',thesis:''},{sym:'NVDA',shares:'',entry:'',date:'',thesis:''},{sym:'TSLA',shares:'',entry:'',date:'',thesis:''}],
+    UK: [{sym:'HSBA.L',shares:'',entry:'',date:'',thesis:''},{sym:'BP.L',shares:'',entry:'',date:'',thesis:''},{sym:'AZN.L',shares:'',entry:'',date:'',thesis:''}],
+    EU: [{sym:'AIR.PA',shares:'',entry:'',date:'',thesis:''},{sym:'ASML.AS',shares:'',entry:'',date:'',thesis:''},{sym:'SAP.DE',shares:'',entry:'',date:'',thesis:''}],
+  };
+  return defaults[region];
+}
+function loadWL(region) {
+  try {
+    const raw = localStorage.getItem('wl2_'+region);
+    if(raw) return JSON.parse(raw);
+  } catch(e){}
+  return defaultWL(region);
+}
+let watchlist = { US: loadWL('US'), UK: loadWL('UK'), EU: loadWL('EU') };
+
+/* ── PRICE CACHE ── */
+let priceCache = {};
+let wlPrices = {};
+const PROXY = 'https://api.allorigins.win/get?url=';
+
+function yahooUrl(syms) {
+  return 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + encodeURIComponent(syms.join(',')) + '&fields=regularMarketPrice,regularMarketChangePercent,regularMarketPreviousClose,regularMarketOpen,regularMarketVolume,averageVolume,fiftyTwoWeekHigh,fiftyTwoWeekLow,marketCap,priceToSalesTrailing12Months,trailingPE,shortName,fiftyDayAverage,twoHundredDayAverage';
+}
+
+async function fetchQuotes(syms) {
+  try {
+    const url = yahooUrl(syms);
+    const r = await fetch(PROXY + encodeURIComponent(url), {signal: AbortSignal.timeout(10000)});
+    const j = await r.json();
+    const data = JSON.parse(j.contents);
+    const quotes = (data?.quoteResponse?.result) || [];
+    const out = {};
+    quotes.forEach(q => { out[q.symbol] = q; });
+    return out;
+  } catch(e) { return {}; }
+}
+
+/* ── FETCH 1Y HISTORY FOR CHART ── */
+async function fetchHistory(sym) {
+  try {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=1y`;
+    const r = await fetch(PROXY + encodeURIComponent(url), {signal: AbortSignal.timeout(10000)});
+    const j = await r.json();
+    const data = JSON.parse(j.contents);
+    const closes = data?.chart?.result?.[0]?.indicators?.quote?.[0]?.close || [];
+    const timestamps = data?.chart?.result?.[0]?.timestamp || [];
+    return {closes: closes.filter(Boolean), timestamps};
+  } catch(e) { return {closes:[], timestamps:[]}; }
+}
+
+/* ── FORMAT HELPERS ── */
+function fmtPrice(v) { if(!v) return '—'; return v > 1000 ? '$'+v.toLocaleString('en-US',{maximumFractionDigits:2}) : '$'+v.toFixed(2); }
+function fmtPct(v)  { if(v===null||v===undefined) return '—'; return (v>0?'+':'')+v.toFixed(2)+'%'; }
+function fmtMCap(v) { if(!v) return '—'; if(v>=1e12) return '$'+(v/1e12).toFixed(1)+'T'; if(v>=1e9) return '$'+(v/1e9).toFixed(1)+'B'; if(v>=1e6) return '$'+(v/1e6).toFixed(0)+'M'; return '$'+v.toFixed(0); }
+function fmtVol(v)  { if(!v) return '—'; if(v>=1e9) return (v/1e9).toFixed(2)+'B'; if(v>=1e6) return (v/1e6).toFixed(1)+'M'; if(v>=1e3) return (v/1e3).toFixed(0)+'K'; return v; }
+function clr(v)     { return v>0?'up':v<0?'dn':'neu'; }
+
+/* ── DRAW MINI SPARKLINE ── */
+function drawSparkline(canvasId, closes, positive) {
+  const canvas = document.getElementById(canvasId);
+  if(!canvas || !closes.length) return;
+  const ctx = canvas.getContext('2d');
+  const color = positive ? '#2ecc8a' : '#ff5f6d';
+  new Chart(ctx, {
+    type:'line',
+    data:{
+      labels: closes.map((_,i)=>i),
+      datasets:[{data:closes,borderColor:color,borderWidth:1.5,pointRadius:0,fill:false,tension:.3}]
+    },
+    options:{responsive:false,animation:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}}}
+  });
+}
+
+/* ── RENDER SCREENER TABLE ── */
+async function renderScreener() {
+  const syms = SCREENER.map(s => s.sym);
+  const quotes = await fetchQuotes(syms);
+  Object.assign(priceCache, quotes);
+  const body = document.getElementById('screener-body');
+  body.innerHTML = '';
+
+  // Draw sparklines after row inserts
+  const sparkData = {};
+
+  for(const s of SCREENER) {
+    const q = quotes[s.sym] || {};
+    const price = q.regularMarketPrice || 0;
+    const chgPct = q.regularMarketChangePercent || 0;
+    const sma50  = q.fiftyDayAverage || 0;
+    const sma200 = q.twoHundredDayAverage || 0;
+    const above50  = sma50  ? price > sma50  : null;
+    const above200 = sma200 ? price > sma200 : null;
+
+    const erClass = s.erPct >= 40 ? 'background:#ff6b35;color:#fff' : s.erPct >= 25 ? 'background:#f9a825;color:#000' : 'background:#2ecc8a;color:#000';
+    const y1Class = s.y1 >= 0 ? 'up' : 'dn';
+    const ytdClass = s.ytd >= 0 ? 'up' : 'dn';
+    const mktCapVal = q.marketCap ? fmtMCap(q.marketCap) : s.mktCap;
+    const peVal = q.trailingPE ? q.trailingPE.toFixed(2) : (s.pe ? s.pe.toFixed(2) : '<span class="neu">n/a</span>');
+    const psVal = q.priceToSalesTrailing12Months ? q.priceToSalesTrailing12Months.toFixed(2) : s.ps.toFixed(2);
+    const arrow = v => v ? `<span style="color:var(--green);font-size:13px">▲</span>` : `<span style="color:var(--red);font-size:13px">▼</span>`;
+    const sparkId = 'spark-' + s.sym;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="sym-cell">${s.sym}</td>
+      <td class="co-cell">${s.co}</td>
+      <td class="r">${price ? fmtPrice(price) : '—'}</td>
+      <td class="r"><span class="er-pct" style="${erClass}">+${s.erPct.toFixed(2)}%</span></td>
+      <td class="r">${mktCapVal}</td>
+      <td class="r">${psVal}</td>
+      <td class="r">${peVal}</td>
+      <td class="r ${ytdClass}">${fmtPct(s.ytd)}</td>
+      <td><canvas id="${sparkId}" class="spark-wrap" width="80" height="30" role="img" aria-label="${s.sym} 1-year chart"></canvas></td>
+      <td class="r ${y1Class}">${fmtPct(s.y1)}</td>
+      <td class="r">${s.rs}</td>
+      <td style="text-align:center">${above50!==null?arrow(above50):'—'}</td>
+      <td style="text-align:center">${above50!==null?arrow(above50):'—'}</td>
+      <td style="text-align:center">${above200!==null?arrow(above200):'—'}</td>
+    `;
+    tr.onclick = () => openModal(s.sym, s.co);
+    body.appendChild(tr);
+  }
+
+  // Avg row
+  const avgYtd = SCREENER.reduce((s,r)=>s+r.ytd,0)/SCREENER.length;
+  const avgY1  = SCREENER.reduce((s,r)=>s+r.y1,0)/SCREENER.length;
+  const avgEr  = SCREENER.reduce((s,r)=>s+r.erPct,0)/SCREENER.length;
+  const avgRow = document.createElement('tr');
+  avgRow.className = 'avg-row';
+  avgRow.innerHTML = `<td colspan="2" style="color:var(--muted)">Avg.</td>
+    <td class="r">—</td><td class="r mono">${avgEr.toFixed(2)}%</td>
+    <td class="r">—</td><td class="r">—</td><td class="r">—</td>
+    <td class="r ${avgYtd>=0?'up':'dn'}">${fmtPct(avgYtd)}</td>
+    <td>—</td><td class="r ${avgY1>=0?'up':'dn'}">${fmtPct(avgY1)}</td>
+    <td colspan="4" class="r">—</td>`;
+  body.appendChild(avgRow);
+
+  // Fetch sparkline data for visible rows (batched)
+  fetchSparklines(SCREENER.map(s=>s.sym));
+}
+
+async function fetchSparklines(syms) {
+  for(const sym of syms) {
+    const h = await fetchHistory(sym);
+    if(h.closes.length > 0) {
+      const isPositive = h.closes[h.closes.length-1] >= h.closes[0];
+      drawSparkline('spark-'+sym, h.closes, isPositive);
+    }
+    await new Promise(r => setTimeout(r, 120)); // throttle
+  }
+}
+
+/* ── WATCHLIST RENDER ── */
+async function renderWatchlist() {
+  for(const region of ['US','UK','EU']) renderWatchlistSection(region);
+  await refreshWatchlistPrices();
+}
+
+function saveWatchlist() {
+  localStorage.setItem('wl2_US', JSON.stringify(watchlist.US));
+  localStorage.setItem('wl2_UK', JSON.stringify(watchlist.UK));
+  localStorage.setItem('wl2_EU', JSON.stringify(watchlist.EU));
+}
+
+function renderWatchlistSection(region) {
+  const list = document.getElementById('wl-' + region.toLowerCase() + '-list');
+  const items = watchlist[region];
+  if(!items.length) {
+    list.innerHTML = '<div class="wl-empty">No stocks yet — fill in the form above</div>';
+    return;
+  }
+  list.innerHTML = items.map((item, idx) => {
+    const sym = item.sym;
+    const q = wlPrices[sym];
+    const livePrice = q ? q.regularMarketPrice : null;
+    const chgPct = q ? q.regularMarketChangePercent : null;
+    const name = q?.shortName || sym;
+    const chgStr = chgPct != null ? fmtPct(chgPct) : '—';
+    const chgCls = chgPct > 0 ? 'up' : chgPct < 0 ? 'dn' : 'neu';
+
+    // P&L calc
+    let plHtml = '';
+    if(item.shares && item.entry && livePrice) {
+      const pl = (livePrice - parseFloat(item.entry)) * parseFloat(item.shares);
+      const plPct = ((livePrice - parseFloat(item.entry)) / parseFloat(item.entry)) * 100;
+      plHtml = `<div class="wl-pl ${pl>=0?'up':'dn'}">${pl>=0?'+':''}$${Math.abs(pl).toFixed(0)} (${pl>=0?'+':''}${plPct.toFixed(1)}%)</div>`;
+    }
+
+    // Meta line
+    const metaParts = [];
+    if(item.shares) metaParts.push(item.shares + ' shares');
+    if(item.entry)  metaParts.push('@ $' + parseFloat(item.entry).toFixed(2));
+    if(item.date)   metaParts.push(item.date);
+    const metaHtml = metaParts.length ? `<div class="wl-pos-meta">${metaParts.join(' · ')}</div>` : '';
+    const thesisHtml = item.thesis ? `<div class="wl-thesis-snip" title="${item.thesis.replace(/"/g,'&quot;')}">${item.thesis}</div>` : '';
+
+    return `<div class="wl-item">
+      <div class="wl-item-left" onclick="openModal('${sym}','${name.replace(/'/g,'\\\'')}')" title="Click to open detail">
+        <div style="min-width:0">
+          <div class="wl-sym">${sym}</div>
+          <div class="wl-name">${name}</div>
+          ${metaHtml}${thesisHtml}
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div class="wl-price">${livePrice ? fmtPrice(livePrice) : '—'}</div>
+        <div class="wl-chg ${chgCls}">${chgStr}</div>
+        ${plHtml}
+      </div>
+      <div class="wl-actions">
+        <button class="wl-edit" onclick="openPosEdit('${region}',${idx})" title="Edit position">✎ Edit</button>
+        <button class="wl-remove" onclick="removeFromWatchlist('${region}',${idx})" title="Remove">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function refreshWatchlistPrices() {
+  const allSyms = [...watchlist.US, ...watchlist.UK, ...watchlist.EU].map(i=>i.sym).filter(Boolean);
+  if(!allSyms.length) return;
+  ['US','UK','EU'].forEach(r => document.getElementById('wl-'+r.toLowerCase()+'-status').textContent = 'fetching...');
+  const quotes = await fetchQuotes(allSyms);
+  Object.assign(wlPrices, quotes);
+  for(const region of ['US','UK','EU']) {
+    document.getElementById('wl-'+region.toLowerCase()+'-status').textContent = watchlist[region].length + ' positions';
+    renderWatchlistSection(region);
+  }
+  renderWatchlistTable();
+}
+
+function renderWatchlistTable() {
+  const tbody = document.getElementById('wl-table-body');
+  const allItems = [
+    ...watchlist.US.map(i=>({...i,r:'US'})),
+    ...watchlist.UK.map(i=>({...i,r:'UK'})),
+    ...watchlist.EU.map(i=>({...i,r:'EU'})),
+  ];
+  if(!allItems.length) {
+    tbody.innerHTML = '<tr><td colspan="14" class="wl-empty">Add stocks to your watchlist above</td></tr>';
+    return;
+  }
+  tbody.innerHTML = allItems.map(item => {
+    const q = wlPrices[item.sym] || {};
+    const p = q.regularMarketPrice;
+    const chg = q.regularMarketChangePercent;
+    const sma50 = q.fiftyDayAverage;
+    const above50 = sma50 && p ? p > sma50 : null;
+    const tagCls = item.r==='US'?'tag-us':item.r==='UK'?'tag-uk':'tag-eu';
+
+    let plCell = '—', plPctCell = '—', plCls = 'neu';
+    if(item.shares && item.entry && p) {
+      const pl = (p - parseFloat(item.entry)) * parseFloat(item.shares);
+      const plPct = ((p - parseFloat(item.entry)) / parseFloat(item.entry)) * 100;
+      plCls = pl >= 0 ? 'up' : 'dn';
+      plCell = (pl>=0?'+':'') + '$' + Math.abs(pl).toFixed(0);
+      plPctCell = (plPct>=0?'+':'') + plPct.toFixed(1) + '%';
+    }
+
+    const thesisTrunc = item.thesis ? (item.thesis.length > 60 ? item.thesis.slice(0,60)+'…' : item.thesis) : '—';
+    return `<tr onclick="openModal('${item.sym}','${(q.shortName||item.sym).replace(/'/g,'\\\'')}')" style="cursor:pointer">
+      <td class="sym-cell">${item.sym}</td>
+      <td>${q.shortName||'—'}</td>
+      <td><span class="tag ${tagCls}">${item.r}</span></td>
+      <td class="r">${item.shares||'—'}</td>
+      <td class="r">${item.entry?'$'+parseFloat(item.entry).toFixed(2):'—'}</td>
+      <td class="r">${p?fmtPrice(p):'—'}</td>
+      <td class="r ${chg>0?'up':chg<0?'dn':'neu'}">${chg!=null?fmtPct(chg):'—'}</td>
+      <td class="r ${plCls}">${plCell}</td>
+      <td class="r ${plCls}">${plPctCell}</td>
+      <td class="r">${q.fiftyTwoWeekHigh?fmtPrice(q.fiftyTwoWeekHigh):'—'}</td>
+      <td class="r">${q.marketCap?fmtMCap(q.marketCap):'—'}</td>
+      <td style="text-align:center">${above50!==null?(above50?'<span style="color:var(--green)">▲ Yes</span>':'<span style="color:var(--red)">▼ No</span>'):'—'}</td>
+      <td style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">${item.date||'—'}</td>
+      <td style="font-size:11px;color:var(--muted);max-width:180px" title="${(item.thesis||'').replace(/"/g,'&quot;')}">${thesisTrunc}</td>
+    </tr>`;
+  }).join('');
+}
+
+function addToWatchlist(region) {
+  const r = region.toLowerCase();
+  const sym   = (document.getElementById('wl-'+r+'-sym').value||'').trim().toUpperCase();
+  const shares = document.getElementById('wl-'+r+'-shares').value.trim();
+  const entry  = document.getElementById('wl-'+r+'-price').value.trim();
+  const date   = document.getElementById('wl-'+r+'-date').value.trim();
+  const thesis = document.getElementById('wl-'+r+'-thesis').value.trim();
+  if(!sym) return;
+  if(watchlist[region].find(i=>i.sym===sym)) {
+    // sym already exists — just update fields if provided
+    const existing = watchlist[region].find(i=>i.sym===sym);
+    if(shares) existing.shares = shares;
+    if(entry)  existing.entry  = entry;
+    if(date)   existing.date   = date;
+    if(thesis) existing.thesis = thesis;
+  } else {
+    watchlist[region].push({sym, shares, entry, date, thesis});
+  }
+  saveWatchlist();
+  // clear form
+  ['sym','shares','price','thesis'].forEach(f => { const el = document.getElementById('wl-'+r+'-'+f); if(el) el.value=''; });
+  document.getElementById('wl-'+r+'-date').value='';
+  refreshWatchlistPrices();
+}
+
+function removeFromWatchlist(region, idx) {
+  watchlist[region].splice(idx, 1);
+  saveWatchlist();
+  renderWatchlistSection(region);
+  renderWatchlistTable();
+}
+
+/* ── POSITION EDIT MODAL ── */
+function openPosEdit(region, idx) {
+  const item = watchlist[region][idx];
+  document.getElementById('pm-region').value = region;
+  document.getElementById('pm-idx').value    = idx;
+  document.getElementById('pm-sym').value    = item.sym;
+  document.getElementById('pm-shares').value = item.shares || '';
+  document.getElementById('pm-entry').value  = item.entry  || '';
+  document.getElementById('pm-date').value   = item.date   || '';
+  document.getElementById('pm-thesis').value = item.thesis || '';
+  document.getElementById('pos-modal-title').textContent = 'Edit Position — ' + item.sym;
+  document.getElementById('pos-modal-overlay').classList.remove('hidden');
+}
+function hidePosModal() {
+  document.getElementById('pos-modal-overlay').classList.add('hidden');
+}
+function closePosModal(e) {
+  if(e.target===document.getElementById('pos-modal-overlay')) hidePosModal();
+}
+function savePosEdit() {
+  const region = document.getElementById('pm-region').value;
+  const idx    = parseInt(document.getElementById('pm-idx').value);
+  watchlist[region][idx].shares = document.getElementById('pm-shares').value.trim();
+  watchlist[region][idx].entry  = document.getElementById('pm-entry').value.trim();
+  watchlist[region][idx].date   = document.getElementById('pm-date').value.trim();
+  watchlist[region][idx].thesis = document.getElementById('pm-thesis').value.trim();
+  saveWatchlist();
+  hidePosModal();
+  renderWatchlistSection(region);
+  renderWatchlistTable();
+}
+
+/* ── MODAL ── */
+let modalChart = null;
+function openModal(sym, co) {
+  document.getElementById('m-sym').textContent = sym;
+  document.getElementById('m-co').textContent = co || sym;
+  document.getElementById('modal-body').innerHTML = '<div class="loading-spinner"><div class="spinner"></div>Loading stock data...</div>';
+  document.getElementById('modal-overlay').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  loadModalData(sym);
+}
+
+function hideModal() {
+  document.getElementById('modal-overlay').classList.add('hidden');
+  document.body.style.overflow = '';
+  if(modalChart) { modalChart.destroy(); modalChart = null; }
+}
+
+function closeModal(e) {
+  if(e.target === document.getElementById('modal-overlay')) hideModal();
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Escape') hideModal(); });
+
+async function loadModalData(sym) {
+  const [quoteData, histData] = await Promise.all([
+    fetchQuotes([sym]),
+    fetchHistory(sym)
+  ]);
+
+  const q = quoteData[sym] || {};
+  const closes = histData.closes;
+  const timestamps = histData.timestamps;
+
+  const price   = q.regularMarketPrice;
+  const prevClose = q.regularMarketPreviousClose;
+  const open    = q.regularMarketOpen;
+  const vol     = q.regularMarketVolume;
+  const avgVol  = q.averageVolume;
+  const high52  = q.fiftyTwoWeekHigh;
+  const low52   = q.fiftyTwoWeekLow;
+  const mcap    = q.marketCap;
+  const pe      = q.trailingPE;
+  const ps      = q.priceToSalesTrailing12Months;
+  const sma50   = q.fiftyDayAverage;
+  const sma200  = q.twoHundredDayAverage;
+  const chgPct  = q.regularMarketChangePercent;
+  const chgAbs  = price && prevClose ? price - prevClose : null;
+
+  // Compute simple moving averages from history
+  function sma(n) {
+    if(closes.length < n) return null;
+    const slice = closes.slice(-n);
+    return slice.reduce((a,b)=>a+b,0)/n;
+  }
+  const sma9  = sma(9);
+  const sma21 = sma(21);
+  const sma30 = sma(30);
+
+  // RSI calculation (14-period)
+  function calcRSI(data, period=14) {
+    if(data.length < period+1) return null;
+    let gains=0, losses=0;
+    for(let i=1;i<=period;i++){const d=data[i]-data[i-1];if(d>0)gains+=d;else losses-=d;}
+    let ag=gains/period, al=losses/period;
+    for(let i=period+1;i<data.length;i++){const d=data[i]-data[i-1];const g=d>0?d:0,l=d<0?-d:0;ag=(ag*(period-1)+g)/period;al=(al*(period-1)+l)/period;}
+    return al===0?100:100-(100/(1+ag/al));
+  }
+  const rsi = calcRSI(closes);
+
+  // MACD
+  function ema(data, n) {
+    if(data.length < n) return null;
+    const k=2/(n+1);let e=data.slice(0,n).reduce((a,b)=>a+b,0)/n;
+    for(let i=n;i<data.length;i++)e=data[i]*k+e*(1-k);
+    return e;
+  }
+  const ema12 = ema(closes, 12);
+  const ema26 = ema(closes, 26);
+  const macd  = (ema12 && ema26) ? ema12 - ema26 : null;
+
+  // Business summaries (static — expandable)
+  const summaries = {
+    INOD:'Innodata is a global data engineering company specializing in AI training data, digital services, and publishing technology. They provide data annotation, labeling, and AI solutions to enterprise clients.',
+    BLZE:'Backblaze is a cloud storage and data backup provider offering B2 Cloud Storage and computer backup services to businesses and consumers globally at competitive pricing.',
+    STRL:'Sterling Infrastructure provides e-infrastructure solutions including data center site preparation, transportation, utilities, and residential construction across the United States.',
+    DOCN:'DigitalOcean is a cloud computing platform focused on developers and SMBs, offering scalable virtual servers (Droplets), managed Kubernetes, databases, and app deployment tools.',
+    FLNC:'Fluence Energy is a global energy storage company providing battery-based energy storage products and services, digital applications, and services to utilities and developers.',
+    FLEX:'Flex is a global technology supply chain and manufacturing solutions company serving diversified end markets including industrial, medical, automotive, and consumer devices.',
+    XMTR:'Xometry is an AI-enabled marketplace for custom manufacturing, connecting buyers of manufactured parts with suppliers providing CNC machining, 3D printing, sheet metal, and injection molding.',
+    SILC:'Silicom provides server adapters, networking solutions and platform solutions to tier-1 OEMs and system integrators for networking, cloud, and telecommunications markets.',
+    HUT: 'Hut 8 Corp is a Bitcoin mining and high-performance computing company operating data centers in North America, with a growing managed services and colocation business.',
+    RKLB:'Rocket Lab is a space launch and systems company providing end-to-end mission solutions including the Electron small launch vehicle and Photon satellite platform.',
+    AAON:'AAON is a manufacturer of semi-custom commercial HVAC equipment including rooftop units, chillers, and data center cooling solutions sold primarily in North America.',
+    DDOG:'Datadog is a cloud-scale monitoring and security platform providing observability, log management, APM, and security monitoring for DevOps teams and cloud environments.',
+    HIMX:'Himax Technologies designs and supplies display driver ICs for flat panel displays, CMOS image sensors, and tinted glass for consumer electronics and automotive markets.',
+    COCO:'Vita Coco Company markets and sells coconut water and related natural beverages, holding a leading global position in the premium coconut water category.',
+    SITM:'SiTime Corporation designs and markets silicon-based timing semiconductors and clock solutions for communications, IoT, industrial, automotive, and aerospace markets.',
+    BE:  'Bloom Energy manufactures solid oxide fuel cell energy servers that convert natural gas or hydrogen into electricity through an electrochemical process, providing clean, reliable on-site power.',
+    NXPI:'NXP Semiconductors provides high-performance mixed signal and standard product semiconductor solutions for automotive, industrial, mobile, and communication infrastructure markets.',
+    SMCI:'Super Micro Computer designs and manufactures high-performance server and storage solutions for cloud, data center, AI/ML, and high-performance computing applications.',
+    TWLO:'Twilio is a cloud communications platform enabling developers to embed voice, video, messaging, and authentication capabilities into applications via APIs.',
+    INTC:'Intel Corporation designs and manufactures microprocessors, chipsets, SoCs, FPGAs, and related technologies for data center, PC, IoT, and mobile markets globally.',
+    CIFR:'Cipher Mining is a US-based Bitcoin mining company operating large-scale mining facilities powered primarily by renewable energy sources.',
+    URI: 'United Rentals is the largest equipment rental company in the world, renting general and specialty construction equipment to construction and industrial customers.',
+    JOBY:'Joby Aviation is developing an electric air taxi (eVTOL) designed to carry a pilot and four passengers, targeting Urban Air Mobility markets for commercial passenger service.',
+  };
+
+  const summary = summaries[sym] || `${sym} is a publicly traded company. Detailed business description unavailable — check Yahoo Finance, Bloomberg, or the company\'s investor relations page for full information.`;
+
+  // Format chart labels
+  const chartLabels = timestamps.map(t => {
+    const d = new Date(t*1000);
+    return d.toLocaleDateString('en-GB',{month:'short',day:'numeric'});
+  });
+
+  // Price relative to SMA lines for chart
+  const sma50Points  = closes.map((_,i) => { if(i<49) return null; const sl=closes.slice(i-49,i+1); return sl.reduce((a,b)=>a+b,0)/50; });
+  const sma200Points = closes.map((_,i) => { if(i<199) return null; const sl=closes.slice(i-199,i+1); return sl.reduce((a,b)=>a+b,0)/200; });
+
+  const rsiColor = rsi ? (rsi > 70 ? '#ff5f6d' : rsi < 30 ? '#2ecc8a' : '#f9a825') : '#888';
+  const rsiLabel = rsi ? (rsi > 70 ? 'Overbought' : rsi < 30 ? 'Oversold' : 'Neutral') : '—';
+  const macdColor = macd ? (macd > 0 ? 'var(--green)' : 'var(--red)') : 'var(--muted)';
+  const macdLabel = macd ? (macd > 0 ? 'Bullish' : 'Bearish') : '—';
+
+  function maLabel(n, val) {
+    if(!val || !price) return {val:'—', diff:'—', cls:'neu'};
+    const diff = ((price-val)/val*100);
+    return {val:'$'+val.toFixed(2), diff:(diff>0?'+':'')+diff.toFixed(2)+'%', cls:diff>0?'up':'dn'};
+  }
+  const ma9d  = maLabel(9,  sma9);
+  const ma21d = maLabel(21, sma21);
+  const ma30d = maLabel(30, sma30);
+  const ma50d = maLabel(50, sma50);
+  const ma200d= maLabel(200,sma200);
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-price-row">
+      <span class="modal-price">${price ? fmtPrice(price) : '—'}</span>
+      <span class="modal-chg ${clr(chgAbs)}">${chgAbs ? (chgAbs>0?'+':'')+'$'+chgAbs.toFixed(2) : ''} ${chgPct ? fmtPct(chgPct) : ''}</span>
+    </div>
+
+    <div class="modal-summary">${summary}</div>
+
+    <div class="modal-grid">
+      <div class="modal-metric"><div class="lbl">Prev Close</div><div class="val">${prevClose?fmtPrice(prevClose):'—'}</div></div>
+      <div class="modal-metric"><div class="lbl">Open</div><div class="val">${open?fmtPrice(open):'—'}</div></div>
+      <div class="modal-metric"><div class="lbl">Volume</div><div class="val">${fmtVol(vol)}</div></div>
+      <div class="modal-metric"><div class="lbl">Avg Volume</div><div class="val">${fmtVol(avgVol)}</div></div>
+      <div class="modal-metric"><div class="lbl">52W High</div><div class="val ${price&&high52&&price>=high52*0.95?'up':''}">${high52?fmtPrice(high52):'—'}</div></div>
+      <div class="modal-metric"><div class="lbl">52W Low</div><div class="val">${low52?fmtPrice(low52):'—'}</div></div>
+      <div class="modal-metric"><div class="lbl">Mkt Cap</div><div class="val">${mcap?fmtMCap(mcap):'—'}</div></div>
+      <div class="modal-metric"><div class="lbl">P/E Ratio</div><div class="val">${pe?pe.toFixed(1):'—'}</div></div>
+    </div>
+
+    <div class="modal-section-title">Price Chart — 1 Year</div>
+    <div class="modal-chart-wrap">
+      <canvas id="modal-chart" role="img" aria-label="${sym} 1-year price chart showing closing prices with 50-day and 200-day moving averages."></canvas>
+    </div>
+
+    <div class="modal-section-title">Moving Averages</div>
+    <div class="modal-ma-grid">
+      ${[['9D', ma9d],['21D',ma21d],['30D',ma30d],['50D',ma50d],['200D',ma200d]].map(([label,m])=>`
+        <div class="modal-ma">
+          <div class="ma-lbl">${label} SMA</div>
+          <div class="ma-val">${m.val}</div>
+          <div class="ma-diff ${m.cls}">${m.diff}</div>
+        </div>`).join('')}
+    </div>
+
+    <div class="modal-section-title">Technical Indicators</div>
+    <div class="modal-indicators">
+      <div class="indicator-card">
+        <div class="ic-title">RSI (14) <span style="color:${rsiColor}">${rsiLabel}</span></div>
+        <div class="ic-value" style="color:${rsiColor}">${rsi?rsi.toFixed(1):'—'}</div>
+        <div class="ic-sub">Oversold &lt;30 · Overbought &gt;70</div>
+        <div class="rsi-bar"><div class="rsi-fill" style="width:${rsi?rsi+'%':'0%'};background:${rsiColor}"></div></div>
+      </div>
+      <div class="indicator-card">
+        <div class="ic-title">MACD (12,26) <span style="color:${macdColor}">${macdLabel}</span></div>
+        <div class="ic-value" style="color:${macdColor}">${macd?(macd>0?'+':'')+macd.toFixed(3):'—'}</div>
+        <div class="ic-sub">EMA12: ${ema12?'$'+ema12.toFixed(2):'—'} · EMA26: ${ema26?'$'+ema26.toFixed(2):'—'}</div>
+      </div>
+    </div>
+  `;
+
+  // Draw chart
+  if(closes.length > 0) {
+    const ctx = document.getElementById('modal-chart').getContext('2d');
+    const isPositive = price >= closes[0];
+    const lineColor = isPositive ? '#2ecc8a' : '#ff5f6d';
+    const gradientFill = ctx.createLinearGradient(0, 0, 0, 200);
+    gradientFill.addColorStop(0, isPositive ? 'rgba(46,204,138,0.2)' : 'rgba(255,95,109,0.2)');
+    gradientFill.addColorStop(1, 'rgba(0,0,0,0)');
+
+    if(modalChart) modalChart.destroy();
+    modalChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: chartLabels,
+        datasets: [
+          {
+            label: sym,
+            data: closes,
+            borderColor: lineColor,
+            backgroundColor: gradientFill,
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: true,
+            tension: 0.2,
+            order: 1,
+          },
+          {
+            label: '50 SMA',
+            data: sma50Points,
+            borderColor: '#f9a825',
+            borderWidth: 1.5,
+            pointRadius: 0,
+            fill: false,
+            tension: 0.2,
+            borderDash: [4,3],
+            order: 2,
+          },
+          {
+            label: '200 SMA',
+            data: sma200Points,
+            borderColor: '#7c6fff',
+            borderWidth: 1.5,
+            pointRadius: 0,
+            fill: false,
+            tension: 0.2,
+            borderDash: [6,4],
+            order: 3,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: { color: '#6e6e8a', font: { size: 11, family: 'DM Mono' }, boxWidth: 20, padding: 12 }
+          },
+          tooltip: {
+            backgroundColor: '#1a1a26',
+            titleColor: '#e8e8f0',
+            bodyColor: '#6e6e8a',
+            borderColor: 'rgba(255,255,255,0.1)',
+            borderWidth: 1,
+            callbacks: {
+              label: ctx => ` $${ctx.parsed.y.toFixed(2)}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(255,255,255,0.03)' },
+            ticks: { color: '#6e6e8a', font: { size: 10 }, maxTicksLimit: 8 }
+          },
+          y: {
+            position: 'right',
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            ticks: { color: '#6e6e8a', font: { size: 10, family: 'DM Mono' }, callback: v => '$'+v.toFixed(0) }
+          }
+        }
+      }
+    });
+  }
+}
+
+/* ── PAGE ROUTING ── */
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  if(id === 'watchlist') renderWatchlist();
+}
+
+/* ── REFRESH ALL ── */
+async function refreshAll() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+  document.getElementById('live-dot').style.background = 'var(--amber)';
+  document.getElementById('status-bar').textContent = 'fetching...';
+  await renderScreener();
+  document.getElementById('live-dot').style.background = 'var(--green)';
+  const now = new Date();
+  document.getElementById('status-bar').textContent = 'updated ' + now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  btn.classList.remove('spinning');
+}
+
+/* ── INIT ── */
+window.addEventListener('DOMContentLoaded', () => {
+  const d = new Date();
+  document.getElementById('date-badge').textContent = d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  refreshAll();
+  setInterval(refreshAll, 5 * 60 * 1000);
+});
+</script>
+</body>
+</html>

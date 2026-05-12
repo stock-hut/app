@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Portfolio Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a26;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#e8e8f0;--muted:#6e6e8a;--accent:#7c6fff;--accent2:#4ecdc4;--green:#2ecc8a;--red:#ff5f6d;--amber:#f9a825;--blue:#4a9eff;--r:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+.mono{font-family:'DM Mono',monospace}
+.hdr{padding:20px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+.hdr h1{font-size:20px;font-weight:700;letter-spacing:-0.4px}
+.hdr-sub{color:var(--muted);font-size:12px;margin-top:2px}
+.hdr-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.badge{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:5px 11px;font-size:12px;color:var(--muted);font-family:'DM Mono',monospace}
+.ccy-toggle{display:flex;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;overflow:hidden}
+.ccy-btn{padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted);font-family:'DM Mono',monospace;border:none;background:transparent;transition:all .15s}
+.ccy-btn.active{background:var(--accent);color:#fff}
+.refresh-btn{display:flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:5px 12px;font-size:12px;color:var(--muted);cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s}
+.refresh-btn:hover{color:var(--text)}
+.refresh-btn.spinning svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#last-updated{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap}
+.nav{display:flex;padding:0 32px;border-bottom:1px solid var(--border);overflow-x:auto}
+.tab{padding:13px 18px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:all .15s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.main{padding:20px 32px}
+.toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.group-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-right:2px}
+.filter-btn{padding:5px 13px;border-radius:5px;font-size:12px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:'Syne',sans-serif;transition:all .15s}
+.filter-btn:hover{color:var(--text)}
+.filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.sgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px}
+.mc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px}
+.mc .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px}
+.mc .val{font-size:20px;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:-.8px}
+.mc .sub{font-size:11px;margin-top:3px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px}
+.card-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.acct-group{margin-bottom:20px}
+.acct-hdr{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.acct-hdr-total{font-family:'DM Mono',monospace;font-size:13px;margin-left:auto;font-weight:600}
+.htbl{width:100%;border-collapse:collapse}
+.htbl th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:7px 8px;text-align:left;border-bottom:1px solid var(--border);font-weight:500}
+.htbl td{padding:9px 8px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+.htbl tr:last-child td{border-bottom:none}
+.htbl tr:hover td{background:rgba(255,255,255,.018)}
+.sym{font-family:'DM Mono',monospace;font-weight:500;color:var(--accent2)}
+.pr{font-family:'DM Mono',monospace;text-align:right}
+.up{color:var(--green)}
+.dn{color:var(--red)}
+.neu{color:var(--muted)}
+.cat-badge{font-size:10px;padding:2px 7px;border-radius:3px;white-space:nowrap;font-weight:500}
+.cat-space{background:rgba(74,158,255,.12);color:#4a9eff}
+.cat-ai-semi{background:rgba(124,111,255,.12);color:#9d8fff}
+.cat-ai-data{background:rgba(78,205,196,.12);color:#4ecdc4}
+.cat-ai-cloud{background:rgba(249,168,37,.12);color:#f9a825}
+.cat-trust{background:rgba(46,204,138,.12);color:#2ecc8a}
+.cat-drone{background:rgba(255,95,109,.12);color:#ff8f9a}
+.cat-quantum{background:rgba(200,130,255,.12);color:#c882ff}
+.cat-manuf{background:rgba(160,160,200,.12);color:#a0a0d0}
+.pill-sipp-us{background:rgba(124,111,255,.15);color:#9d8fff}
+.pill-sipp-uk{background:rgba(78,205,196,.15);color:#4ecdc4}
+.pill-rob{background:rgba(249,168,37,.15);color:#f9a825}
+.pill-kids{background:rgba(46,204,138,.15);color:#2ecc8a}
+.pill-isa{background:rgba(74,158,255,.15);color:#4a9eff}
+.sig{font-size:10px;padding:2px 7px;border-radius:3px;font-family:'DM Mono',monospace;font-weight:500}
+.sig-sb{background:rgba(46,204,138,.15);color:var(--green)}
+.sig-b{background:rgba(74,158,255,.15);color:var(--blue)}
+.sig-s{background:rgba(255,95,109,.15);color:var(--red)}
+.sig-w{background:rgba(200,130,255,.15);color:#c882ff}
+.alert{display:flex;align-items:flex-start;gap:10px;padding:10px 13px;border-radius:8px;margin-bottom:8px;font-size:13px}
+.alert-d{background:rgba(255,95,109,.08);border:1px solid rgba(255,95,109,.2)}
+.alert-w{background:rgba(249,168,37,.08);border:1px solid rgba(249,168,37,.2)}
+.alert-s{background:rgba(46,204,138,.08);border:1px solid rgba(46,204,138,.2)}
+.alert-i{background:rgba(74,158,255,.08);border:1px solid rgba(74,158,255,.2)}
+.alert-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.alert strong{font-weight:600;display:block;margin-bottom:1px}
+.earn-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.earn-row:last-child{border-bottom:none}
+.earn-sym{font-family:'DM Mono',monospace;color:var(--accent2);font-weight:500;font-size:13px}
+.earn-date{font-family:'DM Mono',monospace;font-size:12px}
+.days-now{background:rgba(255,95,109,.15);color:var(--red);font-size:11px;padding:2px 8px;border-radius:3px}
+.days-soon{background:rgba(249,168,37,.15);color:var(--amber);font-size:11px;padding:2px 8px;border-radius:3px}
+.days-ok{background:rgba(255,255,255,.05);color:var(--muted);font-size:11px;padding:2px 8px;border-radius:3px}
+.pbar-track{background:var(--bg3);border-radius:3px;height:4px;overflow:hidden}
+.pbar-fill{height:100%;border-radius:3px}
+.chart-wrap{position:relative;width:100%;height:200px}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.stat-row:last-child{border-bottom:none}
+.stat-lbl{color:var(--muted)}
+.stat-val{font-family:'DM Mono',monospace;font-weight:500}
+.page{display:none}
+.page.active{display:block}
+.footer{padding:14px 32px;border-top:1px solid var(--border);color:var(--muted);font-size:11px;display:flex;justify-content:space-between}
+</style>
+</head>
+<body>
+<!-- SITE NAV -->
+<div style="padding:8px 32px;background:#0d0d14;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:space-between">
+  <a href="index.html" style="display:flex;align-items:center;gap:7px;text-decoration:none;color:var(--muted);font-size:12px;transition:color .15s" onmouseover="this.style.color='#e8e8f0'" onmouseout="this.style.color='#6e6e8a'">
+    <span style="font-size:14px">⚡</span> Stocks Dashboard
+  </a>
+  <div style="display:flex;gap:4px">
+    <a href="index.html" style="padding:4px 10px;border-radius:4px;font-size:11px;color:var(--muted);text-decoration:none;border:1px solid transparent;transition:all .15s" onmouseover="this.style.borderColor='rgba(255,255,255,0.13)';this.style.color='#e8e8f0'" onmouseout="this.style.borderColor='transparent';this.style.color='#6e6e8a'">Home</a>
+    <span style="padding:4px 10px;border-radius:4px;font-size:11px;color:#9d8fff;background:rgba(124,111,255,0.12);border:1px solid rgba(124,111,255,0.2)">Portfolio</span>
+    <a href="stock_screener.html" style="padding:4px 10px;border-radius:4px;font-size:11px;color:var(--muted);text-decoration:none;border:1px solid transparent;transition:all .15s" onmouseover="this.style.borderColor='rgba(255,255,255,0.13)';this.style.color='#e8e8f0'" onmouseout="this.style.borderColor='transparent';this.style.color='#6e6e8a'">Screener</a>
+    <a href="stock_screener.html" style="padding:4px 10px;border-radius:4px;font-size:11px;color:var(--muted);text-decoration:none;border:1px solid transparent;transition:all .15s" onmouseover="this.style.borderColor='rgba(255,255,255,0.13)';this.style.color='#e8e8f0'" onmouseout="this.style.borderColor='transparent';this.style.color='#6e6e8a'">Watchlist</a>
+  </div>
+</div>
+
+<div class="hdr">
+  <div><h1>Portfolio Dashboard</h1><div class="hdr-sub">5 accounts &middot; 20 positions &middot; SIPP + ISA + Junior ISAs</div></div>
+  <div class="hdr-right">
+    <span id="last-updated">loading prices...</span>
+    <div class="live-dot" id="live-dot"></div>
+    <div class="ccy-toggle">
+      <button class="ccy-btn active" onclick="setCcy('GBP',this)">£ GBP</button>
+      <button class="ccy-btn" onclick="setCcy('USD',this)">$ USD</button>
+    </div>
+    <button class="refresh-btn" onclick="fetchPrices()" id="refresh-btn">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 11-9-9c2.5 0 4.7.9 6.4 2.4L21 3v6h-6l2-2"/></svg>
+      Refresh
+    </button>
+    <div class="badge" id="date-badge">11 May 2026</div>
+  </div>
+</div>
+<div class="nav">
+  <div class="tab active" onclick="showPage('overview',this)">Overview</div>
+  <div class="tab" onclick="showPage('holdings',this)">Holdings</div>
+  <div class="tab" onclick="showPage('signals',this)">Signals &amp; Alerts</div>
+  <div class="tab" onclick="showPage('earnings',this)">Earnings</div>
+  <div class="tab" onclick="showPage('analysis',this)">Trade Analysis</div>
+  <div class="tab" onclick="showPage('kids',this)">Leif &amp; Lena</div>
+</div>
+
+<div id="page-overview" class="page active">
+<div class="main">
+  <div class="sgrid">
+    <div class="mc"><div class="lbl">Total Portfolio</div><div class="val">£63,620</div><div class="sub neu">5 accounts</div></div>
+    <div class="mc"><div class="lbl">Open P/L</div><div class="val up">£19,960</div><div class="sub up">+45.7% blended</div></div>
+    <div class="mc"><div class="lbl">Daily P/L</div><div class="val up">+£2,548</div><div class="sub neu">Today</div></div>
+    <div class="mc"><div class="lbl">All-Time P/L</div><div class="val up">£52,825</div><div class="sub neu">Open + Closed</div></div>
+    <div class="mc"><div class="lbl">329 Closed Trades</div><div class="val up">£33,116</div><div class="sub neu">46.2% win rate</div></div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Account Breakdown</div>
+      <table class="htbl"><tbody>
+        <tr><td><span class="cat-badge pill-sipp-us">SIPP US</span></td><td class="pr">£38,626</td><td class="pr up">+£11,459 <span class="neu" style="font-size:11px">+42%</span></td></tr>
+        <tr><td><span class="cat-badge pill-sipp-uk">SIPP UK</span></td><td class="pr">£7,453</td><td class="pr up">+£1,684 <span class="neu" style="font-size:11px">+29%</span></td></tr>
+        <tr><td><span class="cat-badge pill-kids">Kids (Leif)</span></td><td class="pr">~£7,106</td><td class="pr up">+£2,635 <span class="neu" style="font-size:11px">+59%</span></td></tr>
+        <tr><td><span class="cat-badge pill-kids">Kids (Lena)</span></td><td class="pr">~£7,106</td><td class="pr up">+£2,635 <span class="neu" style="font-size:11px">+59%</span></td></tr>
+        <tr><td><span class="cat-badge pill-rob">Robinhood ISA</span></td><td class="pr">~£2,000</td><td class="pr up">+£935 <span class="neu" style="font-size:11px">+86%</span></td></tr>
+        <tr><td><span class="cat-badge pill-isa">Personal ISA</span></td><td class="pr">£1,329</td><td class="pr up">+£612 <span class="neu" style="font-size:11px">+85%</span></td></tr>
+      </tbody></table>
+    </div>
+    <div class="card">
+      <div class="card-title">Allocation by Account</div>
+      <div class="chart-wrap"><canvas id="allocChart" role="img" aria-label="Donut chart: SIPP US 61%, SIPP UK 12%, Kids 22%, Robinhood 3%, Personal ISA 2%."></canvas></div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;font-size:11px;color:var(--muted)">
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#7c6fff"></span>SIPP US 61%</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#4ecdc4"></span>SIPP UK 12%</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#2ecc8a"></span>Kids 22%</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#f9a825"></span>Robinhood 3%</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#4a9eff"></span>ISA 2%</span>
+      </div>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Sector Exposure</div>
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span class="neu">New Space</span><span class="mono">37%</span></div><div class="pbar-track"><div class="pbar-fill" style="width:37%;background:#4a9eff"></div></div></div>
+        <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span class="neu">AI / Semiconductors</span><span class="mono">36%</span></div><div class="pbar-track"><div class="pbar-fill" style="width:36%;background:#7c6fff"></div></div></div>
+        <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span class="neu">AI / Data Analytics</span><span class="mono">21%</span></div><div class="pbar-track"><div class="pbar-fill" style="width:21%;background:#4ecdc4"></div></div></div>
+        <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span class="neu">AI / Cloud Infrastructure</span><span class="mono">9%</span></div><div class="pbar-track"><div class="pbar-fill" style="width:9%;background:#f9a825"></div></div></div>
+        <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span class="neu">Drone / Quantum / Manuf.</span><span class="mono">6%</span></div><div class="pbar-track"><div class="pbar-fill" style="width:6%;background:#888"></div></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Top Open Performers (Live)</div>
+      <table class="htbl"><tbody>
+        <tr><td class="sym">RXT</td><td>Rackspace</td><td class="pr" id="tp-RXT">—</td><td class="pr up">+162.4%</td></tr>
+        <tr><td class="sym">MU</td><td>Micron</td><td class="pr" id="tp-MU">—</td><td class="pr up">+106.5%</td></tr>
+        <tr><td class="sym">PL</td><td>Planet Labs</td><td class="pr" id="tp-PL">—</td><td class="pr up">+102.9%</td></tr>
+        <tr><td class="sym">NVDA</td><td>NVIDIA</td><td class="pr" id="tp-NVDA">—</td><td class="pr up">+97.5%</td></tr>
+        <tr><td class="sym">NBIS</td><td>Nebius NV</td><td class="pr" id="tp-NBIS">—</td><td class="pr up">+94.5%</td></tr>
+        <tr><td class="sym">RKLB</td><td>Rocket Lab</td><td class="pr" id="tp-RKLB">—</td><td class="pr up">+69.5%</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="page-holdings" class="page">
+<div class="main">
+  <div class="toolbar">
+    <span class="group-label">Group by:</span>
+    <button class="filter-btn active" onclick="setGrouping('account',this)">Account</button>
+    <button class="filter-btn" onclick="setGrouping('sector',this)">Sector</button>
+    <button class="filter-btn" onclick="setGrouping('all',this)">All Positions</button>
+  </div>
+  <div id="holdings-content"></div>
+</div>
+</div>
+
+<div id="page-signals" class="page">
+<div class="main">
+  <div class="alert alert-d"><div class="alert-icon">&#x2193;</div><div><strong>ONDS &mdash; Earnings 14 May &middot; -14.3% &middot; Strong Sell</strong>Short-term signals Strong Sell daily/weekly. Earnings 3 days. Consider exiting 250 shares in SIPP US.</div></div>
+  <div class="alert alert-w"><div class="alert-icon">&#x26A0;</div><div><strong>PLTR Dec 2025 tranche &mdash; underwater -26.3%</strong>25 shares at $182.81, now $134.75. Other tranches profitable; blended still +36%.</div></div>
+  <div class="alert alert-s"><div class="alert-icon">&#x2191;</div><div><strong>MU &mdash; +106.5% &middot; Earnings 1 Jul &middot; consider partial trim</strong>Strong Buy maintained but protecting gains ahead of earnings makes sense at this level.</div></div>
+  <div class="alert alert-i"><div class="alert-icon">i</div><div><strong>RXT &mdash; +162% overall &middot; April $0.985 tranche at +436%</strong>Best open return in portfolio. Watch for reversal signals given magnitude of move.</div></div>
+  <div class="alert alert-w"><div class="alert-icon">&#x26A0;</div><div><strong>QUBT &mdash; Earnings TODAY &middot; -22.3% in Kids ISA</strong>Critical moment. Poor result could deepen losses in the children's long-term accounts.</div></div>
+  <div class="two-col" style="margin-top:18px">
+    <div class="card">
+      <div class="card-title">Analyst Signals</div>
+      <table class="htbl">
+        <thead><tr><th>Sym</th><th>Name</th><th style="text-align:center">Signal</th><th class="pr">Open Gain</th><th class="pr">Live Price</th></tr></thead>
+        <tbody>
+          <tr><td class="sym">MU</td><td>Micron</td><td style="text-align:center"><span class="sig sig-sb">Strong Buy</span></td><td class="pr up">+106.5%</td><td class="pr" id="sp-MU">—</td></tr>
+          <tr><td class="sym">NVDA</td><td>NVIDIA</td><td style="text-align:center"><span class="sig sig-sb">Strong Buy</span></td><td class="pr up">+97.5%</td><td class="pr" id="sp-NVDA">—</td></tr>
+          <tr><td class="sym">RKLB</td><td>Rocket Lab</td><td style="text-align:center"><span class="sig sig-sb">Strong Buy</span></td><td class="pr up">+69.5%</td><td class="pr" id="sp-RKLB">—</td></tr>
+          <tr><td class="sym">NBIS</td><td>Nebius NV</td><td style="text-align:center"><span class="sig sig-sb">Strong Buy</span></td><td class="pr up">+94.5%</td><td class="pr" id="sp-NBIS">—</td></tr>
+          <tr><td class="sym">PL</td><td>Planet Labs</td><td style="text-align:center"><span class="sig sig-sb">Strong Buy</span></td><td class="pr up">+102.9%</td><td class="pr" id="sp-PL">—</td></tr>
+          <tr><td class="sym">SATL</td><td>Satellogic</td><td style="text-align:center"><span class="sig sig-sb">Strong Buy</span></td><td class="pr up">+13.5%</td><td class="pr" id="sp-SATL">—</td></tr>
+          <tr><td class="sym">AMD</td><td>AMD</td><td style="text-align:center"><span class="sig sig-sb">Strong Buy</span></td><td class="pr up">+10.6%</td><td class="pr" id="sp-AMD">—</td></tr>
+          <tr><td class="sym">RXT</td><td>Rackspace</td><td style="text-align:center"><span class="sig sig-b">Buy</span></td><td class="pr up">+162.4%</td><td class="pr" id="sp-RXT">—</td></tr>
+          <tr><td class="sym">VELO</td><td>Velo3D</td><td style="text-align:center"><span class="sig sig-sb">Strong Buy</span></td><td class="pr dn">-1.1%</td><td class="pr" id="sp-VELO">—</td></tr>
+          <tr><td class="sym">PLTR</td><td>Palantir</td><td style="text-align:center"><span class="sig sig-s">Sell (short-term)</span></td><td class="pr up">+36.1%</td><td class="pr" id="sp-PLTR">—</td></tr>
+          <tr><td class="sym">INTC</td><td>Intel</td><td style="text-align:center"><span class="sig sig-s">Sell</span></td><td class="pr up">+12.0%</td><td class="pr" id="sp-INTC">—</td></tr>
+          <tr><td class="sym">ONDS</td><td>Ondas</td><td style="text-align:center"><span class="sig sig-s">Strong Sell</span></td><td class="pr dn">-14.3%</td><td class="pr" id="sp-ONDS">—</td></tr>
+          <tr><td class="sym">QUBT</td><td>Quantum</td><td style="text-align:center"><span class="sig sig-w">Watch</span></td><td class="pr dn">-22.3%</td><td class="pr" id="sp-QUBT">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Key Decisions This Week</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="padding:10px 12px;border-radius:8px;border:1px solid rgba(255,95,109,.2);background:rgba(255,95,109,.05)"><div style="font-weight:600;font-size:13px;margin-bottom:3px">1. QUBT &mdash; Today</div><div style="font-size:12px;color:var(--muted)">Earnings today. -22.3% in Kids ISA. Decide hold vs exit post-announcement.</div></div>
+        <div style="padding:10px 12px;border-radius:8px;border:1px solid rgba(78,205,196,.2);background:rgba(78,205,196,.05)"><div style="font-weight:600;font-size:13px;margin-bottom:3px">2. NBIS &mdash; 13 May</div><div style="font-size:12px;color:var(--muted)">+94.5%. Partial trim vs hold through earnings?</div></div>
+        <div style="padding:10px 12px;border-radius:8px;border:1px solid rgba(249,168,37,.2);background:rgba(249,168,37,.05)"><div style="font-weight:600;font-size:13px;margin-bottom:3px">3. ONDS &mdash; 14 May</div><div style="font-size:12px;color:var(--muted)">-14.3%, Strong Sell. 250 shares SIPP US. Exit before earnings recommended.</div></div>
+        <div style="padding:10px 12px;border-radius:8px;border:1px solid rgba(124,111,255,.2);background:rgba(124,111,255,.05)"><div style="font-weight:600;font-size:13px;margin-bottom:3px">4. PLTR Dec tranche</div><div style="font-size:12px;color:var(--muted)">25 shares at $182.81 now $134.75. Avg down or cut the loss on this lot?</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="page-earnings" class="page">
+<div class="main">
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Earnings Calendar</div>
+      <div class="earn-row"><div><div class="earn-sym">QUBT <span style="font-size:11px;color:var(--muted);font-family:inherit;font-weight:400">Quantum Computing</span></div><div style="font-size:12px;color:var(--muted)">Kids ISA &middot; -22.3%</div></div><div style="text-align:right"><div class="earn-date">11 May 2026</div><span class="days-now">TODAY</span></div></div>
+      <div class="earn-row"><div><div class="earn-sym">NBIS <span style="font-size:11px;color:var(--muted);font-family:inherit;font-weight:400">Nebius NV</span></div><div style="font-size:12px;color:var(--muted)">SIPP US &middot; +94.5%</div></div><div style="text-align:right"><div class="earn-date">13 May 2026</div><span class="days-soon">2 days</span></div></div>
+      <div class="earn-row"><div><div class="earn-sym">ONDS <span style="font-size:11px;color:var(--muted);font-family:inherit;font-weight:400">Ondas</span></div><div style="font-size:12px;color:var(--muted)">SIPP US &middot; -14.3% &middot; Strong Sell</div></div><div style="text-align:right"><div class="earn-date">14 May 2026</div><span class="days-soon">3 days</span></div></div>
+      <div class="earn-row"><div><div class="earn-sym">PL <span style="font-size:11px;color:var(--muted);font-family:inherit;font-weight:400">Planet Labs</span></div><div style="font-size:12px;color:var(--muted)">SIPP US + Personal ISA &middot; +102.9%</div></div><div style="text-align:right"><div class="earn-date">4 Jun 2026</div><span class="days-ok">24 days</span></div></div>
+      <div class="earn-row"><div><div class="earn-sym">MU <span style="font-size:11px;color:var(--muted);font-family:inherit;font-weight:400">Micron</span></div><div style="font-size:12px;color:var(--muted)">SIPP US &middot; +106.5% &middot; consider trim</div></div><div style="text-align:right"><div class="earn-date">1 Jul 2026</div><span class="days-ok">51 days</span></div></div>
+      <div class="earn-row"><div><div class="earn-sym">INTC <span style="font-size:11px;color:var(--muted);font-family:inherit;font-weight:400">Intel</span></div><div style="font-size:12px;color:var(--muted)">SIPP US &middot; +12.0%</div></div><div style="text-align:right"><div class="earn-date">23 Jul 2026</div><span class="days-ok">73 days</span></div></div>
+      <div class="earn-row"><div><div class="earn-sym">AMD <span style="font-size:11px;color:var(--muted);font-family:inherit;font-weight:400">AMD</span></div><div style="font-size:12px;color:var(--muted)">SIPP US &middot; +10.6%</div></div><div style="text-align:right"><div class="earn-date">4 Aug 2026</div><span class="days-ok">85 days</span></div></div>
+      <div class="earn-row"><div><div class="earn-sym">PLTR <span style="font-size:11px;color:var(--muted);font-family:inherit;font-weight:400">Palantir</span></div><div style="font-size:12px;color:var(--muted)">SIPP US + Kids &middot; blended +36.1%</div></div><div style="text-align:right"><div class="earn-date">10 Aug 2026</div><span class="days-ok">91 days</span></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Pre-Earnings Checklist</div>
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)"><div>&#x1F534;</div><div><div style="font-size:13px;font-weight:600">QUBT &mdash; today</div><div style="font-size:12px;color:var(--muted)">-22.3% in Kids ISA. If results disappoint, exit. Long-term but loss is deepening.</div></div></div>
+        <div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)"><div>&#x1F7E1;</div><div><div style="font-size:13px;font-weight:600">NBIS &mdash; 13 May</div><div style="font-size:12px;color:var(--muted)">+94.5%. Trim 5-10 shares to bank partial gain before announcement.</div></div></div>
+        <div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)"><div>&#x1F7E0;</div><div><div style="font-size:13px;font-weight:600">ONDS &mdash; 14 May</div><div style="font-size:12px;color:var(--muted)">-14.3%, Strong Sell. Exit to cap downside on 250 shares.</div></div></div>
+        <div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)"><div>&#x1F7E2;</div><div><div style="font-size:13px;font-weight:600">MU &mdash; 1 Jul</div><div style="font-size:12px;color:var(--muted)">+106.5%. Trim 3-5 shares to lock in gains ahead of earnings.</div></div></div>
+        <div style="display:flex;gap:10px;padding:9px 0"><div>&#x1F535;</div><div><div style="font-size:13px;font-weight:600">PL &mdash; 4 Jun</div><div style="font-size:12px;color:var(--muted)">236 shares SIPP + ISA. +102.9%. EPS still negative but narrowing.</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="page-analysis" class="page">
+<div class="main">
+  <div class="sgrid">
+    <div class="mc"><div class="lbl">Total Trades</div><div class="val">329</div><div class="sub neu">All accounts</div></div>
+    <div class="mc"><div class="lbl">Win Rate</div><div class="val neu">46.2%</div><div class="sub neu">152 wins &middot; 176 losses</div></div>
+    <div class="mc"><div class="lbl">Avg Winner</div><div class="val up">+53.0%</div><div class="sub neu">Average gain %</div></div>
+    <div class="mc"><div class="lbl">Avg Loser</div><div class="val dn">-17.5%</div><div class="sub neu">Average loss %</div></div>
+    <div class="mc"><div class="lbl">Profit Factor</div><div class="val up">3.03x</div><div class="sub up">Edge on winners</div></div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">All-Time Top Performers (Closed)</div>
+      <table class="htbl"><thead><tr><th>Stock</th><th class="pr">Trades</th><th class="pr">Total P/L</th><th class="pr">Avg Gain</th></tr></thead><tbody>
+        <tr><td class="sym">PLTR</td><td class="pr">48</td><td class="pr up">+£18,734</td><td class="pr up">+53.2%</td></tr>
+        <tr><td class="sym">RKLB</td><td class="pr">18</td><td class="pr up">+£5,241</td><td class="pr up">+37.2%</td></tr>
+        <tr><td class="sym">NVDA</td><td class="pr">24</td><td class="pr up">+£4,047</td><td class="pr up">+14.9%</td></tr>
+        <tr><td class="sym">SHOP</td><td class="pr">12</td><td class="pr up">+£3,681</td><td class="pr up">+24.4%</td></tr>
+        <tr><td class="sym">HIMS</td><td class="pr">13</td><td class="pr up">+£3,281</td><td class="pr up">+22.7%</td></tr>
+        <tr><td class="sym">NBIS</td><td class="pr">7</td><td class="pr up">+£2,914</td><td class="pr up">+68.5%</td></tr>
+        <tr><td class="sym">RCH.L</td><td class="pr">12</td><td class="pr up">+£2,725</td><td class="pr up">+42.3%</td></tr>
+        <tr><td class="sym">RCAT</td><td class="pr">4</td><td class="pr up">+£1,600</td><td class="pr up">+45.2%</td></tr>
+        <tr><td class="sym">PL</td><td class="pr">5</td><td class="pr up">+£1,459</td><td class="pr up">+39.9%</td></tr>
+        <tr><td class="sym">ASTS</td><td class="pr">8</td><td class="pr up">+£1,144</td><td class="pr up">+38.6%</td></tr>
+      </tbody></table>
+    </div>
+    <div class="card">
+      <div class="card-title">Closed P/L by Account</div>
+      <div class="chart-wrap"><canvas id="acctPLChart" role="img" aria-label="Bar chart: SIPP US 26614, Kids 4772, ISA 1956, Robinhood 1197, SIPP UK -1423."></canvas></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="page-kids" class="page">
+<div class="main">
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Leif's Junior ISA</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div class="mc"><div class="lbl">Value</div><div class="val" style="font-size:18px">~£7,106</div></div>
+        <div class="mc"><div class="lbl">Open P/L</div><div class="val up" style="font-size:18px">+£2,635</div></div>
+      </div>
+      <table class="htbl"><thead><tr><th>Stock</th><th class="pr">Shares</th><th class="pr">Entry</th><th class="pr">Live</th><th class="pr">Gain</th></tr></thead><tbody>
+        <tr><td class="sym">NVDA</td><td class="pr">17</td><td class="pr">$112.36</td><td class="pr" id="kl-NVDA">—</td><td class="pr up">+97.5%</td></tr>
+        <tr><td class="sym">PLTR</td><td class="pr">41</td><td class="pr">$91.82</td><td class="pr" id="kl-PLTR">—</td><td class="pr up">+47.1%</td></tr>
+        <tr><td class="sym">SATL</td><td class="pr">18</td><td class="pr">$7.27</td><td class="pr" id="kl-SATL">—</td><td class="pr up">+18.4%</td></tr>
+        <tr><td class="sym">QUBT</td><td class="pr">22</td><td class="pr">$13.02</td><td class="pr" id="kl-QUBT">—</td><td class="pr dn">-22.4%</td></tr>
+      </tbody></table>
+    </div>
+    <div class="card">
+      <div class="card-title">Lena's Junior ISA</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div class="mc"><div class="lbl">Value</div><div class="val" style="font-size:18px">~£7,106</div></div>
+        <div class="mc"><div class="lbl">Open P/L</div><div class="val up" style="font-size:18px">+£2,635</div></div>
+      </div>
+      <table class="htbl"><thead><tr><th>Stock</th><th class="pr">Shares</th><th class="pr">Entry</th><th class="pr">Live</th><th class="pr">Gain</th></tr></thead><tbody>
+        <tr><td class="sym">NVDA</td><td class="pr">17</td><td class="pr">$112.36</td><td class="pr" id="ln-NVDA">—</td><td class="pr up">+97.5%</td></tr>
+        <tr><td class="sym">PLTR</td><td class="pr">41</td><td class="pr">$91.71</td><td class="pr" id="ln-PLTR">—</td><td class="pr up">+47.3%</td></tr>
+        <tr><td class="sym">SATL</td><td class="pr">20</td><td class="pr">$7.27</td><td class="pr" id="ln-SATL">—</td><td class="pr up">+18.3%</td></tr>
+        <tr><td class="sym">QUBT</td><td class="pr">23</td><td class="pr">$13.01</td><td class="pr" id="ln-QUBT">—</td><td class="pr dn">-22.3%</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Kids ISA Journey</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+      <div style="display:flex;gap:10px"><div style="font-size:18px">&#x1F4C5;</div><div><div style="font-weight:600;font-size:13px;margin-bottom:3px">First trade: 2018</div><div style="font-size:12px;color:var(--muted)">Burford Capital. ~8 years of investing — exceptional head start.</div></div></div>
+      <div style="display:flex;gap:10px"><div style="font-size:18px">&#x1F3C6;</div><div><div style="font-weight:600;font-size:13px;margin-bottom:3px">Best trade: PLTR Apr 2024</div><div style="font-size:12px;color:var(--muted)">40 shares at ~$22.66 sold Feb 2025 at $90.07. +297% &middot; £2,100+ per child.</div></div></div>
+      <div style="display:flex;gap:10px"><div style="font-size:18px">&#x1F4CA;</div><div><div style="font-weight:600;font-size:13px;margin-bottom:3px">Total P/L: ~£5,021 each</div><div style="font-size:12px;color:var(--muted)">£2,386 realised + £2,635 open per child. Strong foundation.</div></div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="footer">
+  <span>Live prices via Yahoo Finance &middot; GBP/USD fetched live &middot; Auto-refreshes every 5 min</span>
+  <span>Not financial advice. Values indicative.</span>
+</div>
+
+<script>
+var USD_GBP=0.793,livePrices={},currentCcy='GBP',currentGrouping='account';
+var positions=[
+  {acct:'SIPP_US',name:'Intel',sym:'INTC',sector:'AI / Semiconductors',shares:25,avg:112.80,ccy:'USD'},
+  {acct:'SIPP_US',name:'AMD',sym:'AMD',sector:'AI / Semiconductors',shares:9,avg:419.21,ccy:'USD'},
+  {acct:'SIPP_US',name:'Velo3D',sym:'VELO',sector:'Advanced Manufacturing',shares:150,avg:16.35,ccy:'USD'},
+  {acct:'SIPP_US',name:'Satellogic',sym:'SATL',sector:'New Space',shares:500,avg:7.286,ccy:'USD'},
+  {acct:'SIPP_US',name:'Rocket Lab',sym:'RKLB',sector:'New Space',shares:65,avg:70.048,ccy:'USD'},
+  {acct:'SIPP_US',name:'Micron',sym:'MU',sector:'AI / Semiconductors',shares:10,avg:380.00,ccy:'USD'},
+  {acct:'SIPP_US',name:'Ondas',sym:'ONDS',sector:'Drone / Autonomous',shares:250,avg:10.83,ccy:'USD'},
+  {acct:'SIPP_US',name:'Planet Labs',sym:'PL',sector:'New Space',shares:200,avg:21.44,ccy:'USD'},
+  {acct:'SIPP_US',name:'Nebius NV',sym:'NBIS',sector:'AI / Cloud Infrastructure',shares:30,avg:98.93,ccy:'USD'},
+  {acct:'SIPP_US',name:'Palantir',sym:'PLTR',sector:'AI / Data Analytics',shares:50,avg:121.45,ccy:'USD'},
+  {acct:'SIPP_UK',name:'Seraphim Space',sym:'SSIT.L',sector:'New Space',shares:2200,avg:173.50,ccy:'GBP'},
+  {acct:'SIPP_UK',name:'Scottish Mortgage',sym:'SMT.L',sector:'Diversified Trust',shares:150,avg:1301.15,ccy:'GBP'},
+  {acct:'Robin',name:'Satellogic',sym:'SATL',sector:'New Space',shares:108,avg:7.868,ccy:'USD'},
+  {acct:'Robin',name:'Rackspace',sym:'RXT',sector:'AI / Cloud Infrastructure',shares:310,avg:1.714,ccy:'USD'},
+  {acct:'Kids',name:'Satellogic',sym:'SATL',sector:'New Space',shares:38,avg:7.271,ccy:'USD'},
+  {acct:'Kids',name:'Quantum Comp.',sym:'QUBT',sector:'Quantum Computing',shares:45,avg:13.015,ccy:'USD'},
+  {acct:'Kids',name:'NVIDIA',sym:'NVDA',sector:'AI / Semiconductors',shares:34,avg:112.36,ccy:'USD'},
+  {acct:'Kids',name:'Palantir',sym:'PLTR',sector:'AI / Data Analytics',shares:82,avg:91.77,ccy:'USD'},
+  {acct:'ISA',name:'Velo3D',sym:'VELO',sector:'Advanced Manufacturing',shares:20,avg:13.31,ccy:'USD'},
+  {acct:'ISA',name:'Planet Labs',sym:'PL',sector:'New Space',shares:36,avg:19.79,ccy:'USD'}
+];
+var snapPrices={INTC:126.37,AMD:463.70,VELO:14.67,SATL:8.62,RKLB:118.73,MU:784.71,ONDS:9.285,PL:42.395,NBIS:192.40,PLTR:134.75,'SSIT.L':241.50,'SMT.L':1426.50,RXT:5.281,QUBT:10.11,NVDA:221.86};
+var accountMeta={SIPP_US:{label:'SIPP — US Portfolio',pill:'pill-sipp-us'},SIPP_UK:{label:'SIPP — UK Portfolio',pill:'pill-sipp-uk'},Robin:{label:'Robinhood ISA',pill:'pill-rob'},Kids:{label:'Kids ISA — Leif & Lena',pill:'pill-kids'},ISA:{label:'Personal ISA',pill:'pill-isa'}};
+var sectorBadge={'New Space':'cat-space','AI / Semiconductors':'cat-ai-semi','AI / Data Analytics':'cat-ai-data','AI / Cloud Infrastructure':'cat-ai-cloud','Drone / Autonomous':'cat-drone','Quantum Computing':'cat-quantum','Advanced Manufacturing':'cat-manuf','Diversified Trust':'cat-trust'};
+
+function getP(sym){return(livePrices[sym]&&livePrices[sym].price)||snapPrices[sym]||null}
+function getChg(sym){return(livePrices[sym]&&livePrices[sym].chg)||0}
+function fmtUSD(v,d){d=d===undefined?2:d;if(currentCcy==='GBP')return'£'+(v*USD_GBP).toFixed(d);return'$'+v.toFixed(d)}
+function displayPrice(pos){var p=getP(pos.sym);if(!p)return'—';if(pos.ccy==='GBP')return Math.round(p)+'p';return fmtUSD(p)}
+function displayAvg(pos){if(pos.ccy==='GBP')return Math.round(pos.avg)+'p';return fmtUSD(pos.avg)}
+function gainPct(pos){var p=getP(pos.sym);if(!p)return null;return(p-pos.avg)/pos.avg*100}
+function marketValue(pos){var p=getP(pos.sym);if(!p)return 0;if(pos.ccy==='GBP'){var gbp=(p/100)*pos.shares;return currentCcy==='GBP'?gbp:gbp/USD_GBP}var usd=p*pos.shares;return currentCcy==='GBP'?usd*USD_GBP:usd}
+function displayMV(pos){var mv=marketValue(pos);if(pos.ccy==='GBP')return'£'+mv.toFixed(0);if(currentCcy==='GBP')return'£'+mv.toFixed(0);return'$'+mv.toFixed(0)}
+
+function setCcy(ccy,btn){currentCcy=ccy;document.querySelectorAll('.ccy-btn').forEach(function(b){b.classList.remove('active')});btn.classList.add('active');renderHoldings();updateCells()}
+
+function fetchPrices(){
+  var btn=document.getElementById('refresh-btn');btn.classList.add('spinning');
+  document.getElementById('last-updated').textContent='fetching...';
+  document.getElementById('live-dot').style.background='var(--amber)';
+  var syms=['INTC','AMD','VELO','SATL','RKLB','MU','ONDS','PL','NBIS','PLTR','RXT','QUBT','NVDA','SSIT.L','SMT.L'];
+  var joined=encodeURIComponent(syms.join(','));
+  var yahooUrl='https://query1.finance.yahoo.com/v7/finance/quote?symbols='+joined+'&fields=regularMarketPrice,regularMarketChangePercent';
+  fetch('https://api.allorigins.win/get?url='+encodeURIComponent(yahooUrl),{signal:AbortSignal.timeout(9000)})
+  .then(function(r){return r.json()})
+  .then(function(json){
+    var data=JSON.parse(json.contents);
+    var quotes=(data&&data.quoteResponse&&data.quoteResponse.result)||[];
+    if(!quotes.length)throw new Error('no quotes');
+    quotes.forEach(function(q){livePrices[q.symbol]={price:q.regularMarketPrice,chg:q.regularMarketChangePercent||0}});
+    return fetch('https://api.allorigins.win/get?url='+encodeURIComponent('https://query1.finance.yahoo.com/v7/finance/quote?symbols=GBPUSD%3DX'),{signal:AbortSignal.timeout(5000)})
+  })
+  .then(function(r){return r.json()})
+  .then(function(fxj){
+    var fxd=JSON.parse(fxj.contents);
+    var rate=fxd&&fxd.quoteResponse&&fxd.quoteResponse.result&&fxd.quoteResponse.result[0]&&fxd.quoteResponse.result[0].regularMarketPrice;
+    if(rate)USD_GBP=rate;
+    document.getElementById('live-dot').style.background='var(--green)';
+    var now=new Date();document.getElementById('last-updated').textContent='live · '+now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  })
+  .catch(function(){
+    syms.forEach(function(s){if(snapPrices[s]&&!livePrices[s])livePrices[s]={price:snapPrices[s],chg:0}});
+    document.getElementById('live-dot').style.background='var(--amber)';
+    document.getElementById('last-updated').textContent='snapshot data';
+  })
+  .finally(function(){btn.classList.remove('spinning');renderHoldings();updateCells()});
+}
+
+var sigSyms=['MU','NVDA','RKLB','NBIS','PL','SATL','AMD','RXT','VELO','PLTR','INTC','ONDS','QUBT'];
+var topSyms=['RXT','MU','PL','NVDA','NBIS','RKLB'];
+var kidsSyms=['NVDA','PLTR','SATL','QUBT'];
+function updateCells(){
+  sigSyms.forEach(function(sym){var el=document.getElementById('sp-'+sym);if(el){var p=getP(sym);if(p)el.textContent=fmtUSD(p)}});
+  topSyms.forEach(function(sym){var el=document.getElementById('tp-'+sym);if(el){var p=getP(sym);if(p)el.textContent=fmtUSD(p)}});
+  kidsSyms.forEach(function(sym){['kl','ln'].forEach(function(pfx){var el=document.getElementById(pfx+'-'+sym);if(el){var p=getP(sym);if(p)el.textContent=fmtUSD(p)}})});
+}
+
+function setGrouping(mode,btn){currentGrouping=mode;document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active')});btn.classList.add('active');renderHoldings()}
+
+function posRow(pos){
+  var gp=gainPct(pos);
+  var gpStr=gp===null?'—':(gp>=0?'+':'')+gp.toFixed(1)+'%';
+  var gpCls=gp===null?'neu':gp>=0?'up':'dn';
+  var chg=getChg(pos.sym);
+  var chgHtml=chg!==0?' <span class="'+(chg>=0?'up':'dn')+'" style="font-size:10px">'+(chg>=0?'+':'')+chg.toFixed(2)+'%</span>':'';
+  return '<tr><td class="sym">'+pos.sym+'</td><td>'+pos.name+'</td><td><span class="cat-badge '+(sectorBadge[pos.sector]||'')+'">'+pos.sector+'</span></td><td class="pr">'+pos.shares+'</td><td class="pr">'+displayAvg(pos)+'</td><td class="pr">'+displayPrice(pos)+chgHtml+'</td><td class="pr '+gpCls+'">'+gpStr+'</td><td class="pr">'+displayMV(pos)+'</td></tr>'
+}
+
+function groupHdr(label,pill,grp){
+  var sym=currentCcy==='GBP'?'£':'$';
+  var total=grp.reduce(function(s,p){return s+marketValue(p)},0);
+  return '<div class="acct-hdr"><span class="cat-badge '+pill+'" style="font-size:12px;padding:4px 13px">'+label+'</span><span class="acct-hdr-total">'+sym+Math.round(total).toLocaleString()+'</span></div>'
+}
+function tblWrap(rows){return '<table class="htbl" style="width:100%"><thead><tr><th>Symbol</th><th>Name</th><th>Sector</th><th class="pr">Shares</th><th class="pr">Avg Cost</th><th class="pr">Live Price</th><th class="pr">Gain %</th><th class="pr">Mkt Value</th></tr></thead><tbody>'+rows+'</tbody></table>'}
+
+function renderHoldings(){
+  var el=document.getElementById('holdings-content');var html='';
+  if(currentGrouping==='account'){
+    ['SIPP_US','SIPP_UK','Robin','Kids','ISA'].forEach(function(acct){
+      var meta=accountMeta[acct];var grp=positions.filter(function(p){return p.acct===acct});
+      if(!grp.length)return;
+      html+='<div class="acct-group">'+groupHdr(meta.label,meta.pill,grp)+tblWrap(grp.map(posRow).join(''))+'</div>'
+    })
+  } else if(currentGrouping==='sector'){
+    var sectors=[];positions.forEach(function(p){if(sectors.indexOf(p.sector)<0)sectors.push(p.sector)});
+    sectors.forEach(function(sector){
+      var grp=positions.filter(function(p){return p.sector===sector});
+      var sym=currentCcy==='GBP'?'£':'$';
+      var total=grp.reduce(function(s,p){return s+marketValue(p)},0);
+      html+='<div class="acct-group"><div class="acct-hdr"><span class="cat-badge '+(sectorBadge[sector]||'')+'" style="font-size:12px;padding:4px 13px">'+sector+'</span><span class="acct-hdr-total">'+sym+Math.round(total).toLocaleString()+'</span></div>'+tblWrap(grp.map(posRow).join(''))+'</div>'
+    })
+  } else {
+    html='<div class="card">'+tblWrap(positions.map(posRow).join(''))+'</div>'
+  }
+  el.innerHTML=html
+}
+
+function initCharts(){
+  new Chart(document.getElementById('allocChart').getContext('2d'),{type:'doughnut',data:{labels:['SIPP US','SIPP UK','Kids','Robinhood ISA','Personal ISA'],datasets:[{data:[38626,7453,14212,2000,1329],backgroundColor:['#7c6fff','#4ecdc4','#2ecc8a','#f9a825','#4a9eff'],borderWidth:0,hoverOffset:5}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return' £'+c.parsed.toLocaleString()}}}}}});
+  new Chart(document.getElementById('acctPLChart').getContext('2d'),{type:'bar',data:{labels:['SIPP US','Kids ISA','Personal ISA','Robinhood','SIPP UK'],datasets:[{data:[26614,4772,1956,1197,-1423],backgroundColor:[26614,4772,1956,1197,-1423].map(function(v){return v>=0?'#2ecc8a':'#ff5f6d'}),borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6e6e8a',font:{size:11}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#6e6e8a',font:{size:11},callback:function(v){return'£'+(v/1000).toFixed(0)+'k'}}}}}});
+}
+
+function showPage(id,el){document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});document.getElementById('page-'+id).classList.add('active');el.classList.add('active');if(id==='holdings')renderHoldings()}
+
+window.addEventListener('DOMContentLoaded',function(){
+  var d=new Date();document.getElementById('date-badge').textContent=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  initCharts();fetchPrices();setInterval(fetchPrices,5*60*1000)
+});
+</script>
+</body>
+</html>
