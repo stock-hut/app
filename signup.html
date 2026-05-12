@@ -84,6 +84,10 @@ body{display:flex;flex-direction:column;min-height:100vh;background-image:radial
       </div>
     </div>
     <div class="field">
+      <label>Invite Code <span style="color:var(--red)">*</span></label>
+      <input type="text" id="invite-code" placeholder="e.g. ABC12345" style="font-family:'DM Mono',monospace;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" maxlength="8">
+    </div>
+    <div class="field">
       <label>Username</label>
       <input type="text" id="username" placeholder="brendon_trades" autocomplete="username" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')">
     </div>
@@ -118,8 +122,14 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 supabase.auth.getSession().then(({data:{session}}) => {
-  if(session) window.location.href = 'index.html';
+  if(session) window.location.href = 'community.html';
 });
+// Pre-fill invite code from URL
+const urlParams = new URLSearchParams(window.location.search);
+const codeParam = urlParams.get('code');
+if(codeParam) {
+  document.getElementById('invite-code').value = codeParam.toUpperCase();
+}
 
 function showError(msg) {
   const el = document.getElementById('error-msg');
@@ -138,6 +148,7 @@ function setLoading(loading) {
 }
 
 async function signUp() {
+  const inviteCode = document.getElementById('invite-code').value.trim().toUpperCase();
   const firstName = document.getElementById('first-name').value.trim();
   const lastName  = document.getElementById('last-name').value.trim();
   const username  = document.getElementById('username').value.trim();
@@ -145,12 +156,28 @@ async function signUp() {
   const password  = document.getElementById('password').value;
   const confirm   = document.getElementById('confirm-password').value;
 
+  if(!inviteCode) { showError('Please enter your invite code.'); return; }
   if(!firstName || !username || !email || !password) { showError('Please fill in all required fields.'); return; }
   if(username.length < 3) { showError('Username must be at least 3 characters.'); return; }
   if(password.length < 8) { showError('Password must be at least 8 characters.'); return; }
   if(password !== confirm) { showError('Passwords do not match.'); return; }
 
   setLoading(true);
+
+  // Validate invite code
+  const { data: invite, error: inviteErr } = await supabase
+    .from('invites')
+    .select('*')
+    .eq('code', inviteCode)
+    .is('used_at', null)
+    .gt('expires_at', new Date().toISOString())
+    .single();
+
+  if(inviteErr || !invite) {
+    setLoading(false);
+    showError('Invalid or expired invite code. Please check your invite link or contact Brendon.');
+    return;
+  }
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -173,6 +200,11 @@ async function signUp() {
       full_name: firstName + ' ' + lastName,
       is_public: false,
     });
+    // Mark invite as used
+    await supabase.from('invites').update({
+      used_by: data.user.id,
+      used_at: new Date().toISOString()
+    }).eq('code', inviteCode);
   }
 
   showSuccess('✅ Account created! Check your email inbox for a confirmation link. Once confirmed you can <a href="login.html" style="color:var(--accent2);font-weight:600">sign in here</a>.');

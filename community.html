@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Stockhut — Community Feed</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a26;--bg4:#22223a;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#e8e8f0;--muted:#6e6e8a;--accent:#7c6fff;--accent2:#4ecdc4;--green:#2ecc8a;--red:#ff5f6d;--amber:#f9a825;--blue:#4a9eff;--nav-h:56px;--bottom-h:60px}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;overflow-x:hidden}
+
+/* TOP NAV */
+.topnav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);background:rgba(10,10,15,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100}
+.topnav-brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text)}
+.topnav-logo{width:28px;height:28px;background:linear-gradient(135deg,#7c6fff,#4ecdc4);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.topnav-name{font-size:15px;font-weight:800;letter-spacing:-0.4px}
+.topnav-name span{color:var(--accent2)}
+.topnav-right{display:flex;align-items:center;gap:8px}
+.user-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#7c6fff,#4ecdc4);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;cursor:pointer;flex-shrink:0}
+.user-dropdown{position:absolute;top:52px;right:12px;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:6px;min-width:180px;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:none;z-index:200}
+.user-dropdown.show{display:block}
+.dd-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:7px;font-size:13px;color:var(--muted);cursor:pointer;text-decoration:none;transition:all .12s}
+.dd-item:hover{background:var(--bg3);color:var(--text)}
+.dd-divider{height:1px;background:var(--border);margin:4px 0}
+
+/* BOTTOM NAV (mobile) */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--bottom-h);background:rgba(10,10,15,0.97);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 16px;cursor:pointer;text-decoration:none;color:var(--muted);transition:color .15s;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.bnav-item.active{color:var(--accent)}
+.bnav-icon{font-size:20px;line-height:1}
+
+/* DESKTOP SIDE NAV */
+@media(min-width:769px){
+  .bottom-nav{display:none}
+  .side-nav{position:fixed;top:var(--nav-h);left:0;bottom:0;width:220px;border-right:1px solid var(--border);padding:16px 12px;overflow-y:auto;background:var(--bg)}
+  .page-wrap{margin-left:220px;margin-top:var(--nav-h);padding:24px;max-width:1200px}
+  .side-nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;text-decoration:none;transition:all .15s;margin-bottom:2px}
+  .side-nav-item:hover{background:var(--bg3);color:var(--text)}
+  .side-nav-item.active{background:rgba(124,111,255,0.12);color:var(--accent)}
+  .side-nav-item .sni{font-size:16px;width:20px;text-align:center}
+  .side-nav-section{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:12px 12px 6px;font-weight:700}
+}
+@media(max-width:768px){
+  .side-nav{display:none}
+  .page-wrap{margin-top:var(--nav-h);padding:16px 12px;padding-bottom:calc(var(--bottom-h) + 16px)}
+}
+
+/* FEED */
+.feed-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.feed-title{font-size:18px;font-weight:800;letter-spacing:-.5px}
+.btn-post{display:flex;align-items:center;gap:6px;padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s}
+.btn-post:hover{background:#6a5fe8}
+
+/* POST COMPOSER */
+.composer{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:16px;margin-bottom:20px;display:none}
+.composer.show{display:block}
+.composer-top{display:flex;gap:10px;margin-bottom:12px}
+.composer-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#7c6fff,#4ecdc4);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.composer-input{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-family:'Syne',sans-serif;font-size:14px;resize:none;outline:none;min-height:80px;transition:border-color .15s;width:100%}
+.composer-input:focus{border-color:var(--accent)}
+.composer-input::placeholder{color:var(--muted)}
+.composer-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.composer-select{background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 10px;color:var(--text);font-size:12px;outline:none;font-family:'Syne',sans-serif;width:100%}
+.composer-ticker{background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;width:100%}
+.composer-ticker::placeholder{color:var(--muted)}
+.composer-url{background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 10px;color:var(--text);font-size:12px;outline:none;font-family:'DM Mono',monospace;width:100%;grid-column:span 3}
+.composer-url::placeholder{color:var(--muted)}
+.composer-actions{display:flex;justify-content:flex-end;gap:8px}
+.btn-cancel{padding:8px 14px;background:transparent;color:var(--muted);border:1px solid var(--border2);border-radius:7px;font-size:12px;cursor:pointer;font-family:'Syne',sans-serif}
+.btn-submit{padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif}
+
+/* POST CARDS */
+.post-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;transition:border-color .15s}
+.post-card:hover{border-color:var(--border2)}
+.post-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.post-user{display:flex;align-items:center;gap:9px}
+.post-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#7c6fff,#4ecdc4);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.post-name{font-size:13px;font-weight:700}
+.post-time{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.post-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.badge{font-size:10px;padding:3px 8px;border-radius:4px;font-weight:600;font-family:'DM Mono',monospace}
+.badge-bull{background:rgba(46,204,138,0.12);color:var(--green)}
+.badge-bear{background:rgba(255,95,109,0.12);color:var(--red)}
+.badge-neu{background:rgba(255,255,255,0.06);color:var(--muted)}
+.badge-high{background:rgba(249,168,37,0.15);color:var(--amber)}
+.badge-med{background:rgba(74,158,255,0.12);color:var(--blue)}
+.badge-low{background:rgba(255,255,255,0.06);color:var(--muted)}
+.badge-ticker{background:rgba(124,111,255,0.15);color:#9d8fff;cursor:pointer}
+.badge-ticker:hover{background:rgba(124,111,255,0.25)}
+.badge-src{background:rgba(78,205,196,0.1);color:var(--accent2)}
+.post-content{font-size:14px;line-height:1.7;margin-bottom:12px;color:var(--text)}
+.post-source{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-bottom:10px;font-family:'DM Mono',monospace}
+.post-source a{color:var(--accent2);text-decoration:none}
+.post-source a:hover{text-decoration:underline}
+.post-actions{display:flex;align-items:center;gap:14px;border-top:1px solid var(--border);padding-top:10px}
+.post-action{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);cursor:pointer;transition:color .15s;background:none;border:none;font-family:'Syne',sans-serif;padding:0}
+.post-action:hover{color:var(--accent2)}
+
+/* REPLIES */
+.replies{margin-top:12px;border-top:1px solid var(--border);padding-top:12px;display:none}
+.replies.show{display:block}
+.reply{display:flex;gap:8px;margin-bottom:10px}
+.reply-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#4ecdc4,#7c6fff);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.reply-bubble{background:var(--bg3);border-radius:8px;padding:9px 11px;flex:1}
+.reply-meta{font-size:11px;color:var(--muted);margin-bottom:3px}
+.reply-text{font-size:13px;line-height:1.5}
+.reply-input-row{display:flex;gap:8px;margin-top:8px;align-items:flex-start}
+.reply-input{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;font-family:'Syne',sans-serif;resize:none}
+.reply-input:focus{border-color:var(--accent)}
+.reply-send{padding:8px 12px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;flex-shrink:0}
+
+/* SIDEBAR WIDGETS */
+.sidebar{width:280px;flex-shrink:0}
+.widget{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.widget-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;font-weight:700}
+.trending-item{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.trending-item:last-child{border-bottom:none}
+.trending-sym{font-family:'DM Mono',monospace;font-weight:700;font-size:13px;color:var(--accent2)}
+.trending-co{font-size:11px;color:var(--muted)}
+.trending-count{font-size:11px;color:var(--muted);background:var(--bg3);padding:2px 7px;border-radius:4px}
+
+/* LAYOUT */
+.feed-layout{display:flex;gap:20px}
+.feed-main{flex:1;min-width:0}
+
+/* EMPTY STATE */
+.empty-feed{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty-feed-icon{font-size:40px;margin-bottom:12px}
+.empty-feed-title{font-size:16px;font-weight:700;margin-bottom:6px;color:var(--text)}
+.empty-feed-sub{font-size:13px;line-height:1.6}
+
+/* LOADING */
+.loading-post{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
+.skeleton{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:4px;height:14px;margin-bottom:8px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+@media(min-width:1024px){
+  .sidebar{display:block}
+}
+@media(max-width:1023px){
+  .sidebar{display:none}
+  .feed-layout{display:block}
+}
+@media(max-width:768px){
+  .composer-meta{grid-template-columns:1fr 1fr}
+  .composer-url{grid-column:span 2}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<div class="topnav">
+  <a class="topnav-brand" href="community.html">
+    <div class="topnav-logo">🏚</div>
+    <div class="topnav-name">Stockhut<span>.io</span></div>
+  </a>
+  <div class="topnav-right">
+    <div class="user-avatar" id="user-avatar" onclick="toggleDropdown()">?</div>
+    <div class="user-dropdown" id="user-dropdown">
+      <div class="dd-item" style="pointer-events:none;opacity:.6" id="dd-name">—</div>
+      <div class="dd-divider"></div>
+      <a class="dd-item" href="community.html">📰 Feed</a>
+      <a class="dd-item" href="stock_screener.html">⚡ Screener</a>
+      <a class="dd-item" href="stock_screener.html">📋 My Watchlist</a>
+      <div class="dd-item" id="dd-portfolio" style="display:none" onclick="window.location.href='portfolio_dashboard.html'">📊 My Portfolio</div>
+      <div class="dd-item" id="dd-admin" style="display:none" onclick="window.location.href='admin.html'">⚙️ Admin</div>
+      <div class="dd-divider"></div>
+      <div class="dd-item" onclick="signOut()" style="color:#ff8f9a">Sign out</div>
+    </div>
+  </div>
+</div>
+
+<!-- DESKTOP SIDE NAV -->
+<div class="side-nav">
+  <div class="side-nav-section">Main</div>
+  <a class="side-nav-item active" href="community.html"><span class="sni">📰</span> Feed</a>
+  <a class="side-nav-item" href="stock_screener.html"><span class="sni">⚡</span> Screener</a>
+  <a class="side-nav-item" href="stock_screener.html"><span class="sni">📋</span> Watchlist</a>
+  <div class="side-nav-section">Personal</div>
+  <a class="side-nav-item" id="sn-portfolio" href="portfolio_dashboard.html" style="display:none"><span class="sni">📊</span> My Portfolio</a>
+  <div class="side-nav-section" id="sn-admin-section" style="display:none">Admin</div>
+  <a class="side-nav-item" id="sn-admin" href="admin.html" style="display:none"><span class="sni">⚙️</span> Manage Members</a>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="page-wrap">
+  <div class="feed-layout">
+    <div class="feed-main">
+      <div class="feed-header">
+        <div class="feed-title">Research Feed</div>
+        <button class="btn-post" onclick="toggleComposer()">+ Post idea</button>
+      </div>
+
+      <!-- COMPOSER -->
+      <div class="composer" id="composer">
+        <div class="composer-top">
+          <div class="composer-avatar" id="composer-avatar">?</div>
+          <textarea class="composer-input" id="post-content" placeholder="Share a stock idea, research note or market thought..." rows="3"></textarea>
+        </div>
+        <div class="composer-meta">
+          <input class="composer-ticker" id="post-ticker" placeholder="$Ticker (e.g. RKLB)" maxlength="12" oninput="this.value=this.value.toUpperCase()">
+          <select class="composer-select" id="post-direction">
+            <option value="">Direction</option>
+            <option value="bullish">🟢 Bullish</option>
+            <option value="bearish">🔴 Bearish</option>
+            <option value="neutral">🟡 Neutral</option>
+          </select>
+          <select class="composer-select" id="post-conviction">
+            <option value="">Conviction</option>
+            <option value="high">🔥 High</option>
+            <option value="medium">⚡ Medium</option>
+            <option value="low">💧 Low</option>
+          </select>
+          <input class="composer-url" id="post-url" placeholder="Source URL (optional — paste X/Twitter or news link)" type="url">
+        </div>
+        <div class="composer-actions">
+          <button class="btn-cancel" onclick="toggleComposer()">Cancel</button>
+          <button class="btn-submit" onclick="submitPost()">Post idea →</button>
+        </div>
+      </div>
+
+      <!-- FEED -->
+      <div id="feed-container">
+        <div class="loading-post"><div class="skeleton" style="width:60%"></div><div class="skeleton" style="width:90%"></div><div class="skeleton" style="width:75%"></div></div>
+        <div class="loading-post"><div class="skeleton" style="width:50%"></div><div class="skeleton" style="width:85%"></div><div class="skeleton" style="width:65%"></div></div>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="widget">
+        <div class="widget-title">Trending Tickers</div>
+        <div id="trending-tickers">
+          <div class="trending-item"><div><div class="trending-sym">RKLB</div><div class="trending-co">Rocket Lab</div></div><span class="trending-count">5 posts</span></div>
+          <div class="trending-item"><div><div class="trending-sym">PLTR</div><div class="trending-co">Palantir</div></div><span class="trending-count">4 posts</span></div>
+          <div class="trending-item"><div><div class="trending-sym">NBIS</div><div class="trending-co">Nebius NV</div></div><span class="trending-count">3 posts</span></div>
+          <div class="trending-item"><div><div class="trending-sym">MU</div><div class="trending-co">Micron</div></div><span class="trending-count">2 posts</span></div>
+        </div>
+      </div>
+      <div class="widget">
+        <div class="widget-title">Community</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.8">
+          <div>👥 Members: <span style="color:var(--text);font-weight:600" id="member-count">—</span></div>
+          <div>💡 Ideas posted: <span style="color:var(--text);font-weight:600" id="post-count">—</span></div>
+          <div style="margin-top:10px;font-size:11px;border-top:1px solid var(--border);padding-top:10px">Private · Invite only · 🇬🇧 UK based</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottom-nav">
+  <a class="bnav-item active" href="community.html"><span class="bnav-icon">📰</span>Feed</a>
+  <a class="bnav-item" href="stock_screener.html"><span class="bnav-icon">⚡</span>Screener</a>
+  <a class="bnav-item" href="stock_screener.html"><span class="bnav-icon">📋</span>Watchlist</a>
+  <a class="bnav-item" id="bn-portfolio" href="portfolio_dashboard.html" style="display:none"><span class="bnav-icon">📊</span>Portfolio</a>
+</nav>
+
+<script>
+const SUPABASE_URL='https://wmuywxaglwcfqceppxll.supabase.co';
+const SUPABASE_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndtdXl3eGFnbHdjZnFjZXBweGxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NzM3NTcsImV4cCI6MjA5NDE0OTc1N30.HXNXSEMO6pfODeIqPIVQ1AHNRiK7KsVnSH7TKS_Q3Y0';
+const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
+
+const OWNER_EMAIL='brendon.knoetze@gmail.com'; // UPDATE THIS to your real email
+let currentUser=null;
+let userProfile=null;
+
+function toggleDropdown(){document.getElementById('user-dropdown').classList.toggle('show')}
+document.addEventListener('click',e=>{if(!e.target.closest('.topnav-right'))document.getElementById('user-dropdown').classList.remove('show')});
+function toggleComposer(){document.getElementById('composer').classList.toggle('show')}
+
+async function init(){
+  const {data:{session}}=await supabase.auth.getSession();
+  if(!session){window.location.href='login.html';return;}
+  currentUser=session.user;
+  const name=currentUser.user_metadata?.full_name||currentUser.email;
+  const initials=name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('user-avatar').textContent=initials;
+  document.getElementById('composer-avatar').textContent=initials;
+  document.getElementById('dd-name').textContent=name.split(' ')[0];
+
+  // Show portfolio + admin links for owner
+  if(currentUser.email===OWNER_EMAIL||currentUser.user_metadata?.username==='brendon'){
+    ['dd-portfolio','dd-admin','sn-portfolio','sn-admin','sn-admin-section'].forEach(id=>{
+      const el=document.getElementById(id);if(el)el.style.display='flex';
+    });
+    document.getElementById('bn-portfolio').style.display='flex';
+  }
+
+  loadFeed();
+  loadStats();
+}
+
+async function loadFeed(){
+  const {data:posts,error}=await supabase
+    .from('feed_posts')
+    .select('*,profiles(username,full_name)')
+    .order('created_at',{ascending:false})
+    .limit(50);
+
+  const container=document.getElementById('feed-container');
+  if(error||!posts||!posts.length){
+    container.innerHTML=`<div class="empty-feed">
+      <div class="empty-feed-icon">💡</div>
+      <div class="empty-feed-title">No ideas yet</div>
+      <div class="empty-feed-sub">Be the first to post a stock idea.<br>Share what you're watching, buying or researching.</div>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML=posts.map(p=>renderPost(p)).join('');
+  document.getElementById('post-count').textContent=posts.length;
+}
+
+function renderPost(p){
+  const name=p.profiles?.full_name||p.profiles?.username||'Member';
+  const initials=name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  const timeAgo=getTimeAgo(p.created_at);
+  const dirBadge=p.direction?`<span class="badge badge-${p.direction==='bullish'?'bull':p.direction==='bearish'?'bear':'neu'}">${p.direction==='bullish'?'🟢 Bullish':p.direction==='bearish'?'🔴 Bearish':'🟡 Neutral'}</span>`:'';
+  const convBadge=p.conviction?`<span class="badge badge-${p.conviction}">${p.conviction==='high'?'🔥 High conviction':p.conviction==='medium'?'⚡ Medium':'💧 Low'}</span>`:'';
+  const tickerBadge=p.ticker?`<span class="badge badge-ticker" onclick="window.open('https://finance.yahoo.com/quote/${p.ticker}','_blank')">$${p.ticker}</span>`:'';
+  const sourceHtml=p.source_url?`<div class="post-source">🔗 <a href="${p.source_url}" target="_blank" rel="noopener">${p.source_url.replace(/^https?:\/\/(www\.)?/,'').slice(0,50)}...</a></div>`:'';
+
+  return `<div class="post-card" id="post-${p.id}">
+    <div class="post-header">
+      <div class="post-user">
+        <div class="post-avatar">${initials}</div>
+        <div><div class="post-name">@${p.profiles?.username||'member'}</div><div class="post-time">${timeAgo}</div></div>
+      </div>
+    </div>
+    <div class="post-badges">${tickerBadge}${dirBadge}${convBadge}</div>
+    <div class="post-content">${escapeHtml(p.content)}</div>
+    ${sourceHtml}
+    <div class="post-actions">
+      <button class="post-action" onclick="toggleReplies('${p.id}')">💬 Reply</button>
+      <button class="post-action" onclick="copyPostLink('${p.id}')">🔗 Share</button>
+      ${currentUser&&p.user_id===currentUser.id?`<button class="post-action" style="color:var(--red);margin-left:auto" onclick="deletePost('${p.id}')">🗑 Delete</button>`:''}
+    </div>
+    <div class="replies" id="replies-${p.id}">
+      <div id="replies-list-${p.id}"></div>
+      <div class="reply-input-row">
+        <textarea class="reply-input" id="reply-input-${p.id}" placeholder="Add a reply..." rows="2"></textarea>
+        <button class="reply-send" onclick="submitReply('${p.id}')">Send</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function submitPost(){
+  const content=document.getElementById('post-content').value.trim();
+  if(!content)return;
+  const ticker=document.getElementById('post-ticker').value.replace('$','').trim()||null;
+  const direction=document.getElementById('post-direction').value||null;
+  const conviction=document.getElementById('post-conviction').value||null;
+  const sourceUrl=document.getElementById('post-url').value.trim()||null;
+  const sourceType=sourceUrl?(sourceUrl.includes('twitter.com')||sourceUrl.includes('x.com')?'twitter':'news'):'manual';
+
+  const {data,error}=await supabase.from('feed_posts').insert({
+    user_id:currentUser.id,content,ticker,direction,conviction,
+    source_url:sourceUrl,source_type:sourceType
+  }).select('*,profiles(username,full_name)').single();
+
+  if(!error&&data){
+    const container=document.getElementById('feed-container');
+    const emptyState=container.querySelector('.empty-feed');
+    if(emptyState)container.innerHTML='';
+    container.insertAdjacentHTML('afterbegin',renderPost(data));
+    document.getElementById('post-content').value='';
+    document.getElementById('post-ticker').value='';
+    document.getElementById('post-direction').value='';
+    document.getElementById('post-conviction').value='';
+    document.getElementById('post-url').value='';
+    toggleComposer();
+  }
+}
+
+async function toggleReplies(postId){
+  const repliesEl=document.getElementById('replies-'+postId);
+  repliesEl.classList.toggle('show');
+  if(repliesEl.classList.contains('show'))loadReplies(postId);
+}
+
+async function loadReplies(postId){
+  const {data:replies}=await supabase.from('feed_replies')
+    .select('*,profiles(username,full_name)')
+    .eq('post_id',postId).order('created_at',{ascending:true});
+  const listEl=document.getElementById('replies-list-'+postId);
+  if(!replies||!replies.length){listEl.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0 8px">No replies yet — be the first!</div>';return;}
+  listEl.innerHTML=replies.map(r=>{
+    const rName=r.profiles?.full_name||r.profiles?.username||'Member';
+    const rInitials=rName.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    return `<div class="reply"><div class="reply-avatar">${rInitials}</div><div class="reply-bubble"><div class="reply-meta">@${r.profiles?.username||'member'} · ${getTimeAgo(r.created_at)}</div><div class="reply-text">${escapeHtml(r.content)}</div></div></div>`;
+  }).join('');
+}
+
+async function submitReply(postId){
+  const input=document.getElementById('reply-input-'+postId);
+  const content=input.value.trim();if(!content)return;
+  const {error}=await supabase.from('feed_replies').insert({post_id:postId,user_id:currentUser.id,content});
+  if(!error){input.value='';loadReplies(postId);}
+}
+
+async function deletePost(postId){
+  if(!confirm('Delete this post?'))return;
+  await supabase.from('feed_posts').delete().eq('id',postId).eq('user_id',currentUser.id);
+  document.getElementById('post-'+postId)?.remove();
+}
+
+function copyPostLink(postId){navigator.clipboard?.writeText(window.location.origin+'/community.html#post-'+postId);alert('Link copied!');}
+
+async function loadStats(){
+  const {count}=await supabase.from('profiles').select('*',{count:'exact',head:true});
+  document.getElementById('member-count').textContent=count||1;
+}
+
+function getTimeAgo(ts){
+  const s=Math.floor((Date.now()-new Date(ts))/1000);
+  if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';
+  if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';
+}
+function escapeHtml(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}
+
+async function signOut(){await supabase.auth.signOut();window.location.href='login.html';}
+
+init();
+</script>
+</body>
+</html>
