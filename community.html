@@ -80,6 +80,23 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
 .post-content{font-size:14px;line-height:1.7;margin-bottom:12px;color:var(--text)}
 .post-source{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-bottom:10px;font-family:'DM Mono',monospace}
 .post-source a{color:var(--accent2);text-decoration:none}
+/* TWEET PREVIEW CARD */
+.tweet-card{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;margin-bottom:10px;text-decoration:none;display:block;transition:border-color .15s;cursor:pointer}
+.tweet-card:hover{border-color:rgba(29,161,242,0.4)}
+.tweet-card-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.tweet-card-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#1DA1F2,#0d8bd9);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.tweet-card-name{font-size:13px;font-weight:700}
+.tweet-card-handle{font-size:11px;color:var(--muted)}
+.tweet-card-x{margin-left:auto;color:#1DA1F2;font-size:16px}
+.tweet-card-text{font-size:13px;line-height:1.6;color:var(--text);margin-bottom:8px}
+.tweet-card-footer{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace}
+.tweet-card-loading{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);padding:8px 0}
+/* URL PREVIEW IN COMPOSER */
+.url-preview{background:var(--bg3);border:1px solid rgba(29,161,242,0.3);border-radius:8px;padding:10px 12px;margin-top:8px;display:none}
+.url-preview.show{display:block}
+.url-preview-loading{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.url-preview-content{font-size:12px;color:var(--muted)}
+.url-preview-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
 .post-actions{display:flex;align-items:center;gap:14px;border-top:1px solid var(--border);padding-top:10px}
 .post-action{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);cursor:pointer;transition:color .15s;background:none;border:none;font-family:'Syne',sans-serif;padding:0}
 .post-action:hover{color:var(--accent2)}
@@ -177,8 +194,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
             <option value="medium">⚡ Medium</option>
             <option value="low">💧 Low</option>
           </select>
-          <input class="composer-url" id="post-url" placeholder="Source URL (optional — paste X/Twitter or news link)" type="url">
+          <input class="composer-url" id="post-url" placeholder="Source URL (optional — paste X/Twitter or news link)" type="url" oninput="onUrlInput(this.value)">
         </div>
+        <div class="url-preview" id="url-preview"></div>
         <div class="composer-actions">
           <button class="btn-cancel" onclick="toggleComposer()">Cancel</button>
           <button class="btn-submit" onclick="submitPost()">Post idea →</button>
@@ -229,7 +247,14 @@ var currentUser = null;
 
 function toggleDropdown(){document.getElementById('user-dropdown').classList.toggle('show')}
 document.addEventListener('click',function(e){if(!e.target.closest('.topnav-right'))document.getElementById('user-dropdown').classList.remove('show')});
-function toggleComposer(){document.getElementById('composer').classList.toggle('show')}
+function toggleComposer(){
+  document.getElementById('composer').classList.toggle('show');
+  // Clear preview when closing
+  if(!document.getElementById('composer').classList.contains('show')){
+    document.getElementById('url-preview').classList.remove('show');
+    document.getElementById('url-preview').innerHTML='';
+  }
+}
 
 async function init(){
   var r = await _supa.auth.getSession();
@@ -273,7 +298,7 @@ function renderPost(p){
   var dirBadge = p.direction ? '<span class="badge badge-'+(p.direction==='bullish'?'bull':p.direction==='bearish'?'bear':'neu')+'">'+(p.direction==='bullish'?'🟢 Bullish':p.direction==='bearish'?'🔴 Bearish':'🟡 Neutral')+'</span>' : '';
   var convBadge = p.conviction ? '<span class="badge badge-'+p.conviction+'">'+(p.conviction==='high'?'🔥 High':p.conviction==='medium'?'⚡ Medium':'💧 Low')+'</span>' : '';
   var tickerBadge = p.ticker ? '<span class="badge badge-ticker" onclick="window.open(\'https://finance.yahoo.com/quote/'+p.ticker+'\',\'_blank\')">$'+p.ticker+'</span>' : '';
-  var sourceHtml = p.source_url ? '<div class="post-source">🔗 <a href="'+p.source_url+'" target="_blank" rel="noopener">'+p.source_url.replace(/^https?:\/\/(www\.)?/,'').slice(0,50)+'</a></div>' : '';
+  var sourceHtml = p.source_url ? renderSourceCard(p.source_url) : '';
   var deleteBtn = (currentUser && p.user_id === currentUser.id) ? '<button class="post-action" style="color:var(--red);margin-left:auto" onclick="deletePost(\''+p.id+'\')">🗑 Delete</button>' : '';
   return '<div class="post-card" id="post-'+p.id+'">'+
     '<div class="post-header"><div class="post-user"><div class="post-avatar">'+initials+'</div><div><div class="post-name">@'+(p.profiles&&p.profiles.username?p.profiles.username:'member')+'</div><div class="post-time">'+timeAgo+'</div></div></div></div>'+
@@ -406,6 +431,103 @@ function getTimeAgo(ts){
 function escapeHtml(t){
   return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
 }
+// ── URL / TWEET PREVIEW ──
+var urlPreviewTimer = null;
+function onUrlInput(val){
+  clearTimeout(urlPreviewTimer);
+  var preview = document.getElementById('url-preview');
+  if(!val || !val.startsWith('http')){ preview.classList.remove('show'); preview.innerHTML=''; return; }
+  urlPreviewTimer = setTimeout(function(){ fetchUrlPreview(val); }, 600);
+}
+
+function isTweetUrl(url){
+  return url.includes('twitter.com') || url.includes('x.com') || url.includes('t.co');
+}
+
+async function fetchUrlPreview(url){
+  var preview = document.getElementById('url-preview');
+  preview.classList.add('show');
+  preview.innerHTML = '<div class="url-preview-loading"><span>⏳</span> Loading preview...</div>';
+
+  if(isTweetUrl(url)){
+    // Extract tweet ID from URL
+    var tweetId = extractTweetId(url);
+    if(tweetId){
+      preview.innerHTML = renderTweetPreview(url, tweetId);
+    } else {
+      preview.innerHTML = renderLinkPreview(url);
+    }
+  } else {
+    preview.innerHTML = renderLinkPreview(url);
+  }
+}
+
+function extractTweetId(url){
+  var match = url.match(/status\/(\d+)/);
+  return match ? match[1] : null;
+}
+
+function extractHandle(url){
+  var match = url.match(/(?:twitter\.com|x\.com)\/([^\/\?]+)/);
+  return match ? match[1] : null;
+}
+
+function renderTweetPreview(url, tweetId){
+  var handle = extractHandle(url) || 'twitter';
+  var initials = handle.slice(0,2).toUpperCase();
+  return '<div class="tweet-card" onclick="window.open(\''+url+'\',\'_blank\')">' +
+    '<div class="tweet-card-header">' +
+      '<div class="tweet-card-avatar">'+initials+'</div>' +
+      '<div><div class="tweet-card-name">@'+handle+'</div><div class="tweet-card-handle">on X / Twitter</div></div>' +
+      '<div class="tweet-card-x">𝕏</div>' +
+    '</div>' +
+    '<div class="tweet-card-text">Tweet ID: '+tweetId+' — click to view on X</div>' +
+    '<div class="tweet-card-footer">x.com · '+url.slice(0,50)+(url.length>50?'...':'')+'</div>' +
+  '</div>';
+}
+
+function renderLinkPreview(url){
+  var domain = '';
+  try { domain = new URL(url).hostname.replace('www.',''); } catch(e){ domain = url; }
+  var icon = url.includes('youtube') ? '▶️' : url.includes('reddit') ? '🔴' : url.includes('bloomberg') ? '📊' : url.includes('reuters') ? '📰' : '🔗';
+  return '<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)">' +
+    '<span style="font-size:16px">'+icon+'</span>' +
+    '<div><div class="url-preview-title">'+domain+'</div>' +
+    '<div>'+url.slice(0,60)+(url.length>60?'...':'')+'</div></div>' +
+    '<a href="'+url+'" target="_blank" style="margin-left:auto;color:var(--accent2);font-size:11px;text-decoration:none">Open ↗</a>' +
+  '</div>';
+}
+
+// Render tweet card in post (shown after post is saved)
+function renderSourceCard(url){
+  if(!url) return '';
+  if(isTweetUrl(url)){
+    var tweetId = extractTweetId(url);
+    var handle = extractHandle(url) || 'twitter';
+    var initials = handle.slice(0,2).toUpperCase();
+    return '<a class="tweet-card" href="'+url+'" target="_blank" rel="noopener">' +
+      '<div class="tweet-card-header">' +
+        '<div class="tweet-card-avatar">'+initials+'</div>' +
+        '<div><div class="tweet-card-name">@'+handle+'</div><div class="tweet-card-handle">on X / Twitter</div></div>' +
+        '<div class="tweet-card-x">𝕏</div>' +
+      '</div>' +
+      '<div class="tweet-card-text">View tweet by @'+handle+(tweetId?' · ID: '+tweetId:'')+'</div>' +
+      '<div class="tweet-card-footer">'+url.slice(0,55)+(url.length>55?'...':'')+'</div>' +
+    '</a>';
+  }
+  // Generic link card
+  var domain = '';
+  try { domain = new URL(url).hostname.replace('www.',''); } catch(e){ domain = url; }
+  return '<a class="tweet-card" href="'+url+'" target="_blank" rel="noopener" style="border-color:var(--border2)">' +
+    '<div style="display:flex;align-items:center;gap:8px">' +
+      '<span style="font-size:20px">🔗</span>' +
+      '<div><div class="tweet-card-name">'+domain+'</div>' +
+      '<div class="tweet-card-footer">'+url.slice(0,55)+(url.length>55?'...':'')+'</div></div>' +
+      '<span style="margin-left:auto;color:var(--accent2);font-size:11px">Open ↗</span>' +
+    '</div>' +
+  '</a>';
+}
+
 async function doSignOut(){ await _supa.auth.signOut(); window.location.href='login.html'; }
 
 init();
