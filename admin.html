@@ -275,7 +275,7 @@ async function sendEmailInvite(){
   const btn=document.getElementById('send-invite-btn');
   btn.disabled=true;btn.innerHTML='<span class="spinner-inline"></span>Sending...';
   const code=genCode();
-  const inviteLink=`${window.location.origin}/signup.html?code=${code}`;
+  const inviteLink=`https://stockhut.co/signup.html?code=${code}`;
   const expires=new Date(Date.now()+7*24*60*60*1000).toISOString();
   const {data:{session}}=await _supa.auth.getSession();
   const {error}=await _supa.from('invites').insert({code,email_sent_to:email,created_by:session.user.id,expires_at:expires});
@@ -291,7 +291,7 @@ async function sendEmailInvite(){
 async function generateWALink(){
   const name=document.getElementById('wa-name').value.trim();
   const code=genCode();
-  const inviteLink=`${window.location.origin}/signup.html?code=${code}`;
+  const inviteLink=`https://stockhut.co/signup.html?code=${code}`;
   const expires=new Date(Date.now()+7*24*60*60*1000).toISOString();
   const {data:{session}}=await _supa.auth.getSession();
   await _supa.from('invites').insert({code,created_by:session.user.id,expires_at:expires});
