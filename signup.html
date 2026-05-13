@@ -5,11 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stockhut — Create Account</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a26;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.18);--text:#e8e8f0;--muted:#6e6e8a;--accent:#7c6fff;--accent2:#4ecdc4;--green:#2ecc8a;--red:#ff5f6d}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',sans-serif}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Syne',sans-serif}
 body{display:flex;flex-direction:column;min-height:100vh;background-image:radial-gradient(ellipse at 50% 0%,rgba(78,205,196,0.12) 0%,transparent 60%)}
 .topbar{padding:16px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
 .brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text)}
@@ -18,33 +17,34 @@ body{display:flex;flex-direction:column;min-height:100vh;background-image:radial
 .brand-tld{color:var(--accent2)}
 .topbar-right{font-size:12px;color:var(--muted)}
 .topbar-right a{color:var(--accent);text-decoration:none;font-weight:600}
-.main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px}
-.card{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:36px 40px;width:100%;max-width:440px;box-shadow:0 24px 60px rgba(0,0,0,0.5)}
+.main{flex:1;display:flex;align-items:center;justify-content:center;padding:32px 20px}
+.card{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:32px 36px;width:100%;max-width:440px;box-shadow:0 24px 60px rgba(0,0,0,0.5)}
 .card-title{font-size:22px;font-weight:800;letter-spacing:-0.8px;margin-bottom:6px}
-.card-sub{font-size:13px;color:var(--muted);margin-bottom:28px;line-height:1.5}
-.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.card-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5}
+.perks{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
+.perk{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--muted)}
+.perk-icon{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
 .field label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;font-weight:600}
 .field input{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:border-color .15s;width:100%}
 .field input:focus{border-color:var(--accent2)}
 .field input::placeholder{color:var(--muted)}
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.terms{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:18px;padding:10px 12px;background:var(--bg3);border-radius:7px;border:1px solid var(--border)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.invite-field input{border-color:rgba(78,205,196,0.4);background:rgba(78,205,196,0.05)}
+.invite-field input:focus{border-color:var(--accent2)}
+.terms{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:16px;padding:10px 12px;background:var(--bg3);border-radius:7px;border:1px solid var(--border)}
 .terms a{color:var(--accent);text-decoration:none}
 .btn-primary{width:100%;padding:13px;background:var(--accent2);color:#0a0a0f;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s}
 .btn-primary:hover{background:#3db8b0;transform:translateY(-1px)}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.signin-link{text-align:center;margin-top:20px;font-size:13px;color:var(--muted)}
+.signin-link{text-align:center;margin-top:18px;font-size:13px;color:var(--muted)}
 .signin-link a{color:var(--accent);text-decoration:none;font-weight:600}
-.error-msg{background:rgba(255,95,109,0.1);border:1px solid rgba(255,95,109,0.3);border-radius:7px;padding:10px 12px;font-size:12px;color:#ff8f9a;margin-bottom:14px;display:none}
+.error-msg{background:rgba(255,95,109,0.1);border:1px solid rgba(255,95,109,0.3);border-radius:7px;padding:10px 12px;font-size:12px;color:#ff8f9a;margin-bottom:12px;display:none}
 .error-msg.show{display:block}
-.success-msg{background:rgba(46,204,138,0.1);border:1px solid rgba(46,204,138,0.3);border-radius:7px;padding:12px 14px;font-size:13px;color:var(--green);margin-bottom:14px;display:none;line-height:1.6}
+.success-msg{background:rgba(46,204,138,0.1);border:1px solid rgba(46,204,138,0.3);border-radius:7px;padding:12px 14px;font-size:13px;color:var(--green);margin-bottom:14px;line-height:1.6;display:none}
 .success-msg.show{display:block}
-.spinner-inline{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,0.2);border-top-color:#0a0a0f;border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,0.2);border-top-color:#0a0a0f;border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
-/* PERKS */
-.perks{display:flex;flex-direction:column;gap:7px;margin-bottom:22px}
-.perk{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--muted)}
-.perk-icon{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
 .footer{padding:16px 32px;border-top:1px solid var(--border);text-align:center;font-size:11px;color:var(--muted)}
 </style>
 </head>
@@ -55,7 +55,7 @@ body{display:flex;flex-direction:column;min-height:100vh;background-image:radial
     <div class="brand-icon">🏚</div>
     <div class="brand-name">Stockhut<span class="brand-tld">.io</span></div>
   </a>
-  <div class="topbar-right">Already have an account? <a href="login.html">Sign in</a></div>
+  <div class="topbar-right">Already a member? <a href="login.html">Sign in</a></div>
 </div>
 
 <div class="main">
@@ -73,6 +73,13 @@ body{display:flex;flex-direction:column;min-height:100vh;background-image:radial
     <div class="error-msg" id="error-msg"></div>
     <div class="success-msg" id="success-msg"></div>
 
+    <div class="field invite-field">
+      <label>Invite Code <span style="color:var(--red)">*</span></label>
+      <input type="text" id="invite-code" placeholder="e.g. BRENDON1" maxlength="20"
+        style="font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:2px"
+        oninput="this.value=this.value.toUpperCase()">
+    </div>
+
     <div class="field-row">
       <div class="field">
         <label>First Name</label>
@@ -83,131 +90,164 @@ body{display:flex;flex-direction:column;min-height:100vh;background-image:radial
         <input type="text" id="last-name" placeholder="K" autocomplete="family-name">
       </div>
     </div>
-    <div class="field">
-      <label>Invite Code <span style="color:var(--red)">*</span></label>
-      <input type="text" id="invite-code" placeholder="e.g. ABC12345" style="font-family:'DM Mono',monospace;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" maxlength="8">
-    </div>
+
     <div class="field">
       <label>Username</label>
-      <input type="text" id="username" placeholder="brendon_trades" autocomplete="username" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')">
+      <input type="text" id="username" placeholder="brendon_trades" autocomplete="username"
+        oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')">
     </div>
+
     <div class="field">
-      <label>Email address</label>
+      <label>Email Address</label>
       <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
     </div>
+
     <div class="field">
       <label>Password</label>
       <input type="password" id="password" placeholder="Min. 8 characters" autocomplete="new-password">
     </div>
-    <div class="field" style="margin-bottom:18px">
+
+    <div class="field" style="margin-bottom:16px">
       <label>Confirm Password</label>
-      <input type="password" id="confirm-password" placeholder="Repeat password" autocomplete="new-password" onkeydown="if(event.key==='Enter')signUp()">
+      <input type="password" id="confirm-password" placeholder="Repeat password" autocomplete="new-password">
     </div>
 
     <div class="terms">
       By creating an account you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>. Your portfolio data is private by default — you control what you share.
     </div>
 
-    <button class="btn-primary" id="signup-btn" onclick="signUp()">Create Free Account</button>
-
+    <button class="btn-primary" id="signup-btn" onclick="doSignUp()">Create Free Account</button>
     <div class="signin-link">Already have an account? <a href="login.html">Sign in</a></div>
   </div>
 </div>
 
 <div class="footer">Not financial advice &nbsp;·&nbsp; &copy; 2026 Stockhut</div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = 'https://wmuywxaglwcfqceppxll.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndtdXl3eGFnbHdjZnFjZXBweGxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NzM3NTcsImV4cCI6MjA5NDE0OTc1N30.HXNXSEMO6pfODeIqPIVQ1AHNRiK7KsVnSH7TKS_Q3Y0';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+// Single Supabase init
+var _supa = window.supabase.createClient(
+  'https://wmuywxaglwcfqceppxll.supabase.co',
+  'sb_publishable_K2IyCgEbSW3KPdF0WaGiwQ_y6UGzS96'
+);
 
-supabase.auth.getSession().then(({data:{session}}) => {
-  if(session) window.location.href = 'community.html';
+// Pre-fill invite code from URL param
+(function(){
+  var code = new URLSearchParams(window.location.search).get('code');
+  if(code) document.getElementById('invite-code').value = code.toUpperCase();
+})();
+
+// Redirect if already logged in
+_supa.auth.getSession().then(function(r){
+  if(r.data && r.data.session) window.location.href = 'community.html';
 });
-// Pre-fill invite code from URL
-const urlParams = new URLSearchParams(window.location.search);
-const codeParam = urlParams.get('code');
-if(codeParam) {
-  document.getElementById('invite-code').value = codeParam.toUpperCase();
-}
 
-function showError(msg) {
-  const el = document.getElementById('error-msg');
+function showError(msg){
+  var el = document.getElementById('error-msg');
   el.textContent = msg; el.classList.add('show');
   document.getElementById('success-msg').classList.remove('show');
+  window.scrollTo(0,0);
 }
-function showSuccess(msg) {
-  const el = document.getElementById('success-msg');
+function showSuccess(msg){
+  var el = document.getElementById('success-msg');
   el.innerHTML = msg; el.classList.add('show');
   document.getElementById('error-msg').classList.remove('show');
 }
-function setLoading(loading) {
-  const btn = document.getElementById('signup-btn');
-  btn.disabled = loading;
-  btn.innerHTML = loading ? '<span class="spinner-inline"></span>Creating account...' : 'Create Free Account';
+function setLoading(on){
+  var btn = document.getElementById('signup-btn');
+  btn.disabled = on;
+  btn.innerHTML = on ? '<span class="spinner"></span>Creating account...' : 'Create Free Account';
 }
 
-async function signUp() {
-  const inviteCode = document.getElementById('invite-code').value.trim().toUpperCase();
-  const firstName = document.getElementById('first-name').value.trim();
-  const lastName  = document.getElementById('last-name').value.trim();
-  const username  = document.getElementById('username').value.trim();
-  const email     = document.getElementById('email').value.trim();
-  const password  = document.getElementById('password').value;
-  const confirm   = document.getElementById('confirm-password').value;
+async function doSignUp(){
+  var inviteCode    = document.getElementById('invite-code').value.trim().toUpperCase();
+  var firstName     = document.getElementById('first-name').value.trim();
+  var lastName      = document.getElementById('last-name').value.trim();
+  var username      = document.getElementById('username').value.trim();
+  var email         = document.getElementById('email').value.trim();
+  var password      = document.getElementById('password').value;
+  var confirmPass   = document.getElementById('confirm-password').value;
 
-  if(!inviteCode) { showError('Please enter your invite code.'); return; }
-  if(!firstName || !username || !email || !password) { showError('Please fill in all required fields.'); return; }
+  // Validation
+  if(!inviteCode)    { showError('Please enter your invite code.'); return; }
+  if(!firstName)     { showError('Please enter your first name.'); return; }
+  if(!username)      { showError('Please choose a username.'); return; }
   if(username.length < 3) { showError('Username must be at least 3 characters.'); return; }
+  if(!email || !email.includes('@')) { showError('Please enter a valid email address.'); return; }
   if(password.length < 8) { showError('Password must be at least 8 characters.'); return; }
-  if(password !== confirm) { showError('Passwords do not match.'); return; }
+  if(password !== confirmPass) { showError('Passwords do not match.'); return; }
 
   setLoading(true);
 
-  // Validate invite code
-  const { data: invite, error: inviteErr } = await supabase
+  // Step 1 — validate invite code
+  var inviteResult = await _supa
     .from('invites')
-    .select('*')
+    .select('id, code, expires_at, used_at')
     .eq('code', inviteCode)
-    .is('used_at', null)
-    .gt('expires_at', new Date().toISOString())
-    .single();
+    .maybeSingle();
 
-  if(inviteErr || !invite) {
+  if(inviteResult.error){
     setLoading(false);
-    showError('Invalid or expired invite code. Please check your invite link or contact Brendon.');
+    showError('Could not verify invite code. Please try again.');
+    console.error('Invite check error:', inviteResult.error);
     return;
   }
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
+  if(!inviteResult.data){
+    setLoading(false);
+    showError('Invite code not found. Please check the code and try again.');
+    return;
+  }
+
+  if(inviteResult.data.used_at){
+    setLoading(false);
+    showError('This invite code has already been used.');
+    return;
+  }
+
+  if(new Date(inviteResult.data.expires_at) < new Date()){
+    setLoading(false);
+    showError('This invite code has expired. Please contact Brendon for a new one.');
+    return;
+  }
+
+  var inviteId = inviteResult.data.id;
+
+  // Step 2 — create auth account
+  var signupResult = await _supa.auth.signUp({
+    email: email,
+    password: password,
     options: {
-      data: { full_name: firstName + ' ' + lastName, username },
-      emailRedirectTo: window.location.origin + '/login.html'
+      data: { full_name: firstName + ' ' + lastName, username: username },
+      emailRedirectTo: 'https://stockhut.co/login.html'
     }
   });
 
-  setLoading(false);
-
-  if(error) { showError(error.message); return; }
-
-  // Create profile record
-  if(data.user) {
-    await supabase.from('profiles').upsert({
-      id: data.user.id,
-      username,
-      full_name: firstName + ' ' + lastName,
-      is_public: false,
-    });
-    // Mark invite as used
-    await supabase.from('invites').update({
-      used_by: data.user.id,
-      used_at: new Date().toISOString()
-    }).eq('code', inviteCode);
+  if(signupResult.error){
+    setLoading(false);
+    showError(signupResult.error.message);
+    return;
   }
 
-  showSuccess('✅ Account created! Check your email inbox for a confirmation link. Once confirmed you can <a href="login.html" style="color:var(--accent2);font-weight:600">sign in here</a>.');
+  var user = signupResult.data.user;
+
+  // Step 3 — create profile
+  if(user){
+    await _supa.from('profiles').upsert({
+      id: user.id,
+      username: username,
+      full_name: firstName + ' ' + lastName,
+      is_public: false
+    });
+
+    // Step 4 — mark invite as used
+    await _supa.from('invites')
+      .update({ used_at: new Date().toISOString(), used_by: user.id })
+      .eq('id', inviteId);
+  }
+
+  setLoading(false);
+  showSuccess('✅ Account created! Check your email for a confirmation link. Once confirmed, <a href="login.html" style="color:var(--accent2);font-weight:600">sign in here</a>.');
   document.getElementById('signup-btn').style.display = 'none';
 }
 </script>
