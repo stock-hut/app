@@ -157,6 +157,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
         <div class="feed-title">Research Feed</div>
         <button class="btn-post" onclick="toggleComposer()">+ Post idea</button>
       </div>
+      <div id="ticker-filter-bar" style="display:none;align-items:center;gap:8px;padding:8px 12px;background:rgba(124,111,255,0.08);border:1px solid rgba(124,111,255,0.2);border-radius:8px;margin-bottom:12px;font-size:13px"></div>
       <div class="composer" id="composer">
         <div class="composer-top">
           <div class="composer-avatar" id="composer-avatar">?</div>
@@ -220,7 +221,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
 <script>
 var _supa = window.supabase.createClient(
   'https://wmuywxaglwcfqceppxll.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndtdXl3eGFnbHdjZnFjZXBweGxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NzM3NTcsImV4cCI6MjA5NDE0OTc1N30.HXNXSEMO6pfODeIqPIVQ1AHNRiK7KsVnSH7TKS_Q3Y0'
+  'sb_publishable_K2IyCgEbSW3KPdF0WaGiwQ_y6UGzS96'
 );
 
 var OWNER_EMAIL = 'brendon.knoetze@gmail.com';
@@ -250,11 +251,15 @@ async function init(){
   loadStats();
 }
 
-async function loadFeed(){
-  var r = await _supa.from('feed_posts').select('*,profiles(username,full_name)').order('created_at',{ascending:false}).limit(50);
+async function loadFeed(tickerFilter){
+  var query = _supa.from('feed_posts').select('*,profiles(username,full_name)').order('created_at',{ascending:false}).limit(50);
+  if(tickerFilter) query = query.eq('ticker', tickerFilter);
+  var r = await query;
   var container = document.getElementById('feed-container');
   if(r.error || !r.data || !r.data.length){
-    container.innerHTML='<div class="empty-feed"><div class="empty-feed-icon">💡</div><div class="empty-feed-title">No ideas yet</div><div class="empty-feed-sub">Be the first to post a stock idea.</div></div>';
+    var msg = tickerFilter ? 'No posts for $'+tickerFilter+' yet' : 'No ideas yet';
+    var sub = tickerFilter ? 'Be the first to post about this stock' : 'Be the first to post a stock idea.';
+    container.innerHTML='<div class="empty-feed"><div class="empty-feed-icon">💡</div><div class="empty-feed-title">'+msg+'</div><div class="empty-feed-sub">'+sub+'</div></div>';
     return;
   }
   container.innerHTML = r.data.map(function(p){return renderPost(p)}).join('');
@@ -303,7 +308,7 @@ async function submitPost(){
     document.getElementById('post-conviction').value='';
     document.getElementById('post-url').value='';
     toggleComposer();
-  }
+    loadStats(); // refresh trending tickers
 }
 
 async function toggleReplies(postId){
@@ -338,8 +343,58 @@ async function deletePost(postId){
 }
 
 async function loadStats(){
+  // Member count
   var r = await _supa.from('profiles').select('*',{count:'exact',head:true});
   document.getElementById('member-count').textContent = r.count || 1;
+
+  // Real trending tickers from post data
+  var tp = await _supa.from('feed_posts').select('ticker').not('ticker','is',null);
+  if(tp.data && tp.data.length){
+    // Count occurrences of each ticker
+    var counts = {};
+    tp.data.forEach(function(p){
+      if(p.ticker){
+        counts[p.ticker] = (counts[p.ticker]||0) + 1;
+      }
+    });
+    // Sort by count descending
+    var sorted = Object.keys(counts).sort(function(a,b){return counts[b]-counts[a]}).slice(0,6);
+    var el = document.getElementById('trending-tickers');
+    if(sorted.length){
+      el.innerHTML = sorted.map(function(sym){
+        var count = counts[sym];
+        return '<div class="trending-item" onclick="filterByTicker(\''+sym+'\')">' +
+          '<div><div class="trending-sym">'+sym+'</div>' +
+          '<div class="trending-co">'+count+' '+(count===1?'post':'posts')+'</div></div>' +
+          '<span class="trending-count">'+count+'</span>' +
+        '</div>';
+      }).join('');
+    } else {
+      el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0">Post ideas with tickers to see trending stocks</div>';
+    }
+  } else {
+    document.getElementById('trending-tickers').innerHTML =
+      '<div style="font-size:12px;color:var(--muted);padding:8px 0">Post ideas with tickers to see trending stocks</div>';
+  }
+}
+
+// Filter feed by ticker
+var activeTickerFilter = null;
+function filterByTicker(sym){
+  if(activeTickerFilter === sym){
+    // Toggle off
+    activeTickerFilter = null;
+    document.getElementById('ticker-filter-bar').style.display = 'none';
+    loadFeed();
+  } else {
+    activeTickerFilter = sym;
+    var bar = document.getElementById('ticker-filter-bar');
+    bar.style.display = 'flex';
+    bar.innerHTML = '<span style="font-size:12px;color:var(--muted)">Showing posts for</span> ' +
+      '<span class="badge badge-ticker">$'+sym+'</span> ' +
+      '<button onclick="filterByTicker(\''+sym+'\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;margin-left:auto">✕ Clear filter</button>';
+    loadFeed(sym);
+  }
 }
 
 function getTimeAgo(ts){
@@ -353,6 +408,7 @@ function escapeHtml(t){
 async function doSignOut(){ await _supa.auth.signOut(); window.location.href='login.html'; }
 
 init();
+}
 </script>
 </body>
 </html>
