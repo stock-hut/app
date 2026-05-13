@@ -309,6 +309,7 @@ async function submitPost(){
     document.getElementById('post-url').value='';
     toggleComposer();
     loadStats(); // refresh trending tickers
+  }
 }
 
 async function toggleReplies(postId){
@@ -408,7 +409,6 @@ function escapeHtml(t){
 async function doSignOut(){ await _supa.auth.signOut(); window.location.href='login.html'; }
 
 init();
-}
 </script>
 </body>
 </html>
