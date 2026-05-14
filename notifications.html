@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stockhut — Notifications</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a26;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#e8e8f0;--muted:#6e6e8a;--accent:#7c6fff;--accent2:#4ecdc4;--green:#2ecc8a;--red:#ff5f6d;--amber:#f9a825;--nav-h:56px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh}
+.topnav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);background:rgba(10,10,15,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:100}
+.topnav-brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text)}
+.topnav-logo{width:28px;height:28px;background:linear-gradient(135deg,#7c6fff,#4ecdc4);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.topnav-name{font-size:15px;font-weight:800;letter-spacing:-0.4px}
+.topnav-name span{color:var(--accent2)}
+.back-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;color:var(--muted);border:1px solid var(--border2);transition:all .15s}
+.back-btn:hover{color:var(--text)}
+.main{margin-top:var(--nav-h);padding:24px;max-width:640px;margin-left:auto;margin-right:auto}
+.page-title{font-size:20px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px}
+.page-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+.notif-item{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:border-color .15s;text-decoration:none;color:inherit}
+.notif-item:hover{border-color:var(--border2)}
+.notif-item.unread{border-left:3px solid var(--accent);background:rgba(124,111,255,0.04)}
+.notif-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#7c6fff,#4ecdc4);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.notif-content{flex:1;min-width:0}
+.notif-text{font-size:13px;line-height:1.5;margin-bottom:4px}
+.notif-text strong{font-weight:700;color:var(--text)}
+.notif-time{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.notif-preview{font-size:12px;color:var(--muted);margin-top:4px;padding:6px 8px;background:var(--bg3);border-radius:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.notif-icon{font-size:18px;flex-shrink:0;margin-top:2px}
+.empty{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px}
+.mark-all{display:flex;justify-content:flex-end;margin-bottom:12px}
+.mark-all-btn{font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:'Syne',sans-serif;transition:color .15s}
+.mark-all-btn:hover{color:var(--accent2)}
+.spinner{width:24px;height:24px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="topnav">
+  <a class="topnav-brand" href="community.html">
+    <div class="topnav-logo">🏚</div>
+    <div class="topnav-name">Stockhut<span>.co</span></div>
+  </a>
+  <a class="back-btn" href="community.html">← Back to Feed</a>
+</div>
+
+<div class="main">
+  <div class="page-title">🔔 Notifications</div>
+  <div class="page-sub">Replies to your posts and community activity</div>
+  <div id="notif-container"><div class="spinner"></div></div>
+</div>
+
+<script>
+var _supa = window.supabase.createClient(
+  'https://wmuywxaglwcfqceppxll.supabase.co',
+  'sb_publishable_K2IyCgEbSW3KPdF0WaGiwQ_y6UGzS96'
+);
+var currentUser = null;
+var STORAGE_KEY = 'sh_notif_read_';
+
+async function init() {
+  var r = await _supa.auth.getSession();
+  if (!r.data.session) { window.location.href = 'login.html'; return; }
+  currentUser = r.data.session.user;
+  loadNotifications();
+}
+
+async function loadNotifications() {
+  // Get user's posts
+  var myPostsR = await _supa.from('feed_posts').select('id,content,ticker').eq('user_id', currentUser.id);
+  var myPosts = myPostsR.data || [];
+  if (!myPosts.length) { showEmpty(); return; }
+
+  var postIds = myPosts.map(function(p){ return p.id; });
+  var postMap = {};
+  myPosts.forEach(function(p){ postMap[p.id] = p; });
+
+  // Get replies to my posts
+  var repliesR = await _supa.from('feed_replies')
+    .select('*,profiles(username,full_name)')
+    .in('post_id', postIds)
+    .neq('user_id', currentUser.id)
+    .order('created_at', {ascending:false})
+    .limit(50);
+
+  var replies = repliesR.data || [];
+
+  if (!replies.length) { showEmpty(); return; }
+
+  // Get read state from localStorage
+  var readKey = STORAGE_KEY + currentUser.id;
+  var readIds = JSON.parse(localStorage.getItem(readKey) || '[]');
+
+  var container = document.getElementById('notif-container');
+
+  // Mark all read button
+  var unreadCount = replies.filter(function(r){ return !readIds.includes(r.id); }).length;
+  var markAllHtml = unreadCount > 0 ?
+    '<div class="mark-all"><button class="mark-all-btn" onclick="markAllRead('+JSON.stringify(replies.map(function(r){return r.id;}))+')">Mark all as read</button></div>' : '';
+
+  var items = replies.map(function(reply){
+    var name = (reply.profiles && reply.profiles.full_name) ? reply.profiles.full_name : ((reply.profiles && reply.profiles.username) ? reply.profiles.username : 'Someone');
+    var initials = name.split(' ').map(function(n){return n[0];}).join('').toUpperCase().slice(0,2);
+    var post = postMap[reply.post_id];
+    var postPreview = post ? (post.ticker ? '$'+post.ticker+' — ' : '') + post.content.slice(0,60)+(post.content.length>60?'...':'') : '';
+    var isUnread = !readIds.includes(reply.id);
+    return '<a class="notif-item'+(isUnread?' unread':'')+'" href="community.html" onclick="markRead(\''+reply.id+'\')">' +
+      '<div class="notif-icon">💬</div>' +
+      '<div class="notif-avatar">'+initials+'</div>' +
+      '<div class="notif-content">' +
+        '<div class="notif-text"><strong>@'+(reply.profiles&&reply.profiles.username?reply.profiles.username:'member')+'</strong> replied to your post</div>' +
+        '<div class="notif-preview">'+escHtml(reply.content.slice(0,80))+'</div>' +
+        (postPreview ? '<div class="notif-preview" style="margin-top:3px;opacity:.7">↳ '+escHtml(postPreview)+'</div>' : '') +
+        '<div class="notif-time">'+getTimeAgo(reply.created_at)+'</div>' +
+      '</div>' +
+    '</a>';
+  }).join('');
+
+  container.innerHTML = markAllHtml + items;
+}
+
+function markRead(id) {
+  var readKey = STORAGE_KEY + currentUser.id;
+  var readIds = JSON.parse(localStorage.getItem(readKey) || '[]');
+  if (!readIds.includes(id)) { readIds.push(id); localStorage.setItem(readKey, JSON.stringify(readIds)); }
+}
+
+function markAllRead(ids) {
+  var readKey = STORAGE_KEY + currentUser.id;
+  localStorage.setItem(readKey, JSON.stringify(ids));
+  loadNotifications();
+}
+
+function showEmpty() {
+  document.getElementById('notif-container').innerHTML =
+    '<div class="empty"><div class="empty-icon">🔔</div><div class="empty-title">No notifications yet</div><div style="font-size:13px;color:var(--muted)">When someone replies to your posts you\'ll see it here</div></div>';
+}
+
+function getTimeAgo(ts){
+  var s=Math.floor((Date.now()-new Date(ts))/1000);
+  if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';
+  if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';
+}
+function escHtml(t){ if(!t)return''; return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+init();
+</script>
+</body>
+</html>

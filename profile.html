@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stockhut — Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a26;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#e8e8f0;--muted:#6e6e8a;--accent:#7c6fff;--accent2:#4ecdc4;--green:#2ecc8a;--red:#ff5f6d;--amber:#f9a825;--nav-h:56px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh}
+.topnav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);background:rgba(10,10,15,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:100}
+.topnav-brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text)}
+.topnav-logo{width:28px;height:28px;background:linear-gradient(135deg,#7c6fff,#4ecdc4);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.topnav-name{font-size:15px;font-weight:800;letter-spacing:-0.4px}
+.topnav-name span{color:var(--accent2)}
+.back-btn{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;color:var(--muted);border:1px solid var(--border2);transition:all .15s}
+.back-btn:hover{color:var(--text)}
+.main{margin-top:var(--nav-h);padding:28px;max-width:800px;margin-left:auto;margin-right:auto}
+/* PROFILE HEADER */
+.profile-header{display:flex;align-items:flex-start;gap:20px;margin-bottom:28px;padding:24px;background:var(--bg2);border:1px solid var(--border);border-radius:14px}
+.profile-avatar-lg{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#7c6fff,#4ecdc4);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;flex-shrink:0}
+.profile-name{font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:3px}
+.profile-handle{font-size:14px;color:var(--accent2);font-family:'DM Mono',monospace;margin-bottom:8px}
+.profile-bio{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:12px}
+.profile-stats{display:flex;gap:20px}
+.profile-stat{text-align:center}
+.profile-stat .sv{font-size:18px;font-weight:800;font-family:'DM Mono',monospace;color:var(--text)}
+.profile-stat .sl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:2px}
+.profile-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.profile-tag{font-size:11px;padding:3px 9px;border-radius:4px;background:var(--bg3);color:var(--muted);border:1px solid var(--border)}
+/* EDIT FORM */
+.edit-form{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:20px;margin-bottom:20px;display:none}
+.edit-form.show{display:block}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+.field input,.field textarea{background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:9px 12px;color:var(--text);font-family:'Syne',sans-serif;font-size:13px;outline:none;width:100%}
+.field input:focus,.field textarea:focus{border-color:var(--accent)}
+.field textarea{resize:vertical;min-height:72px}
+.btn-save{padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif}
+.btn-edit{padding:7px 14px;background:var(--bg3);color:var(--muted);border:1px solid var(--border2);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s}
+.btn-edit:hover{color:var(--text);border-color:var(--accent)}
+/* PERFORMANCE */
+.perf-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.perf-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:13px 14px}
+.perf-card .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.perf-card .val{font-size:18px;font-weight:800;font-family:'DM Mono',monospace}
+.up{color:var(--green)}
+.dn{color:var(--red)}
+.neu{color:var(--muted)}
+/* POSTS */
+.section-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+.post-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px}
+.post-card:hover{border-color:var(--border2)}
+.post-user{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.post-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#7c6fff,#4ecdc4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+.post-name{font-size:12px;font-weight:700}
+.post-time{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.post-badges{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.badge{font-size:10px;padding:2px 7px;border-radius:3px;font-weight:600;font-family:'DM Mono',monospace}
+.badge-bull{background:rgba(46,204,138,0.12);color:var(--green)}
+.badge-bear{background:rgba(255,95,109,0.12);color:var(--red)}
+.badge-neu{background:rgba(255,255,255,0.06);color:var(--muted)}
+.badge-ticker{background:rgba(124,111,255,0.15);color:#9d8fff}
+.post-content{font-size:13px;line-height:1.6;color:var(--text)}
+.empty{text-align:center;padding:32px;color:var(--muted);font-size:13px}
+.spinner{width:24px;height:24px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:600px){.perf-grid{grid-template-columns:1fr 1fr}.profile-header{flex-direction:column}.profile-stats{gap:12px}}
+</style>
+</head>
+<body>
+<div class="topnav">
+  <a class="topnav-brand" href="community.html">
+    <div class="topnav-logo">🏚</div>
+    <div class="topnav-name">Stockhut<span>.co</span></div>
+  </a>
+  <a class="back-btn" href="community.html">← Back to Feed</a>
+</div>
+
+<div class="main">
+  <div id="profile-content"><div class="spinner"></div></div>
+</div>
+
+<script>
+var _supa = window.supabase.createClient(
+  'https://wmuywxaglwcfqceppxll.supabase.co',
+  'sb_publishable_K2IyCgEbSW3KPdF0WaGiwQ_y6UGzS96'
+);
+var OWNER_EMAIL = 'brendon.knoetze@gmail.com';
+var currentUser = null;
+var profileUser = null;
+
+async function init() {
+  var r = await _supa.auth.getSession();
+  if (!r.data.session) { window.location.href = 'login.html'; return; }
+  currentUser = r.data.session.user;
+
+  // Get username from URL param
+  var params = new URLSearchParams(window.location.search);
+  var username = params.get('u') || params.get('user');
+
+  if (!username) {
+    // Show own profile
+    loadProfileByUserId(currentUser.id);
+  } else {
+    loadProfileByUsername(username);
+  }
+}
+
+async function loadProfileByUserId(userId) {
+  var r = await _supa.from('profiles').select('*').eq('id', userId).single();
+  if (r.error || !r.data) { document.getElementById('profile-content').innerHTML = '<div class="empty">Profile not found</div>'; return; }
+  profileUser = r.data;
+  renderProfile();
+}
+
+async function loadProfileByUsername(username) {
+  var r = await _supa.from('profiles').select('*').eq('username', username).single();
+  if (r.error || !r.data) { document.getElementById('profile-content').innerHTML = '<div class="empty">Profile not found</div>'; return; }
+  profileUser = r.data;
+  renderProfile();
+}
+
+async function renderProfile() {
+  var isOwn = currentUser && profileUser.id === currentUser.id;
+  var name = profileUser.full_name || profileUser.username;
+  var initials = name.split(' ').map(function(n){ return n[0]; }).join('').toUpperCase().slice(0,2);
+
+  // Load posts
+  var postsR = await _supa.from('feed_posts').select('*').eq('user_id', profileUser.id).order('created_at',{ascending:false});
+  var posts = postsR.data || [];
+
+  // Stats
+  var bullish = posts.filter(function(p){ return p.direction === 'bullish'; }).length;
+  var bearish = posts.filter(function(p){ return p.direction === 'bearish'; }).length;
+  var tickers = [...new Set(posts.filter(function(p){ return p.ticker; }).map(function(p){ return p.ticker; }))];
+
+  var html = '<div class="profile-header">' +
+    '<div class="profile-avatar-lg">'+initials+'</div>' +
+    '<div style="flex:1;min-width:0">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">' +
+        '<div>' +
+          '<div class="profile-name">'+escHtml(name)+'</div>' +
+          '<div class="profile-handle">@'+escHtml(profileUser.username)+'</div>' +
+        '</div>' +
+        (isOwn ? '<button class="btn-edit" onclick="toggleEditForm()">✎ Edit Profile</button>' : '') +
+      '</div>' +
+      '<div class="profile-bio">'+(profileUser.bio ? escHtml(profileUser.bio) : '<span style="color:var(--muted);font-style:italic">No bio yet'+(isOwn?' — click Edit Profile to add one':'')+' </span>')+'</div>' +
+      '<div class="profile-stats">' +
+        '<div class="profile-stat"><div class="sv">'+posts.length+'</div><div class="sl">Ideas</div></div>' +
+        '<div class="profile-stat"><div class="sv">'+bullish+'</div><div class="sl">Bullish</div></div>' +
+        '<div class="profile-stat"><div class="sv">'+bearish+'</div><div class="sl">Bearish</div></div>' +
+        '<div class="profile-stat"><div class="sv">'+tickers.length+'</div><div class="sl">Tickers</div></div>' +
+      '</div>' +
+      (tickers.length ? '<div class="profile-meta">'+tickers.slice(0,8).map(function(t){ return '<span class="profile-tag">$'+t+'</span>'; }).join('')+'</div>' : '') +
+    '</div>' +
+  '</div>';
+
+  // Edit form (own profile only)
+  if (isOwn) {
+    html += '<div class="edit-form" id="edit-form">' +
+      '<div class="field"><label>Full Name</label><input id="ef-name" value="'+escHtml(profileUser.full_name||'')+'"></div>' +
+      '<div class="field"><label>Bio</label><textarea id="ef-bio">'+escHtml(profileUser.bio||'')+'</textarea></div>' +
+      '<div style="display:flex;gap:8px;justify-content:flex-end">' +
+        '<button class="btn-edit" onclick="toggleEditForm()">Cancel</button>' +
+        '<button class="btn-save" onclick="saveProfile()">Save Changes</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  // Posts
+  html += '<div class="section-title">'+posts.length+' Ideas Posted</div>';
+  if (!posts.length) {
+    html += '<div class="empty">'+(isOwn ? 'You haven\'t posted any ideas yet — <a href="community.html" style="color:var(--accent2)">go to the feed</a> to share your first one' : name+' hasn\'t posted any ideas yet')+'</div>';
+  } else {
+    html += posts.map(function(p){
+      var dirBadge = p.direction ? '<span class="badge badge-'+(p.direction==='bullish'?'bull':p.direction==='bearish'?'bear':'neu')+'">'+(p.direction==='bullish'?'🟢 Bullish':p.direction==='bearish'?'🔴 Bearish':'🟡 Neutral')+'</span>' : '';
+      var convBadge = p.conviction ? '<span class="badge" style="background:var(--bg3);color:var(--muted)">'+(p.conviction==='high'?'🔥 High':p.conviction==='medium'?'⚡ Medium':'💧 Low')+'</span>' : '';
+      var tickerBadge = p.ticker ? '<span class="badge badge-ticker">$'+p.ticker+'</span>' : '';
+      return '<div class="post-card">' +
+        '<div class="post-user"><div class="post-avatar">'+initials+'</div>' +
+        '<div><div class="post-name">@'+escHtml(profileUser.username)+'</div><div class="post-time">'+getTimeAgo(p.created_at)+'</div></div></div>' +
+        '<div class="post-badges">'+tickerBadge+dirBadge+convBadge+'</div>' +
+        '<div class="post-content">'+escHtml(p.content)+'</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  document.getElementById('profile-content').innerHTML = html;
+}
+
+function toggleEditForm() {
+  var f = document.getElementById('edit-form');
+  if (f) f.classList.toggle('show');
+}
+
+async function saveProfile() {
+  var name = document.getElementById('ef-name').value.trim();
+  var bio  = document.getElementById('ef-bio').value.trim();
+  if (!name) return;
+  var r = await _supa.from('profiles').update({full_name:name, bio:bio}).eq('id', currentUser.id);
+  if (!r.error) {
+    profileUser.full_name = name;
+    profileUser.bio = bio;
+    renderProfile();
+  }
+}
+
+function getTimeAgo(ts){
+  var s=Math.floor((Date.now()-new Date(ts))/1000);
+  if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';
+  if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';
+}
+function escHtml(t){ if(!t)return''; return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+init();
+</script>
+</body>
+</html>

@@ -22,8 +22,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
 .dd-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:7px;font-size:13px;color:var(--muted);cursor:pointer;text-decoration:none;transition:all .12s}
 .dd-item:hover{background:var(--bg3);color:var(--text)}
 .dd-divider{height:1px;background:var(--border);margin:4px 0}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--bottom-h);background:rgba(10,10,15,0.97);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;z-index:100}
-.bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 16px;cursor:pointer;text-decoration:none;color:var(--muted);transition:color .15s;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--bottom-h);background:rgba(10,10,15,0.97);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;cursor:pointer;text-decoration:none;color:var(--muted);transition:color .15s;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 .bnav-item.active{color:var(--accent)}
 .bnav-icon{font-size:20px;line-height:1}
 @media(min-width:769px){
@@ -39,11 +39,28 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
 @media(max-width:768px){
   .side-nav{display:none}
   .page-wrap{margin-top:var(--nav-h);padding:16px 12px;padding-bottom:calc(var(--bottom-h) + 16px)}
+  .feed-search-input{width:140px !important}
+  .composer-meta{grid-template-columns:1fr 1fr !important}
+  .composer-url{grid-column:span 2 !important}
 }
-.feed-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-.feed-title{font-size:18px;font-weight:800;letter-spacing:-.5px}
-.btn-post{display:flex;align-items:center;gap:6px;padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s}
+
+/* FEED HEADER */
+.feed-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap}
+.feed-title{font-size:18px;font-weight:800;letter-spacing:-.5px;flex-shrink:0}
+.feed-header-right{display:flex;gap:8px;align-items:center}
+.feed-search-wrap{position:relative}
+.feed-search-input{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:7px 12px 7px 32px;color:var(--text);font-size:12px;outline:none;width:200px;font-family:'DM Mono',monospace;transition:border-color .15s}
+.feed-search-input:focus{border-color:var(--accent)}
+.feed-search-input::placeholder{color:var(--muted)}
+.feed-search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
+.feed-search-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px;cursor:pointer;display:none;background:none;border:none;padding:0}
+.btn-post{display:flex;align-items:center;gap:6px;padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s;white-space:nowrap}
 .btn-post:hover{background:#6a5fe8}
+
+/* FILTER BAR */
+.filter-bar{display:none;align-items:center;gap:8px;padding:8px 12px;background:rgba(124,111,255,0.08);border:1px solid rgba(124,111,255,0.2);border-radius:8px;margin-bottom:12px;font-size:13px}
+
+/* COMPOSER */
 .composer{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:16px;margin-bottom:20px;display:none}
 .composer.show{display:block}
 .composer-top{display:flex;gap:10px;margin-bottom:12px}
@@ -51,15 +68,19 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
 .composer-input{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-family:'Syne',sans-serif;font-size:14px;resize:none;outline:none;min-height:80px;transition:border-color .15s;width:100%}
 .composer-input:focus{border-color:var(--accent)}
 .composer-input::placeholder{color:var(--muted)}
-.composer-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.composer-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
 .composer-select{background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 10px;color:var(--text);font-size:12px;outline:none;font-family:'Syne',sans-serif;width:100%}
 .composer-ticker{background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;width:100%}
 .composer-ticker::placeholder{color:var(--muted)}
-.composer-url{background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 10px;color:var(--text);font-size:12px;outline:none;font-family:'DM Mono',monospace;width:100%;grid-column:span 3}
+.composer-url{background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 10px;color:var(--text);font-size:12px;outline:none;font-family:'DM Mono',monospace;width:100%;grid-column:span 3;margin-bottom:4px}
 .composer-url::placeholder{color:var(--muted)}
+.url-preview-box{background:var(--bg3);border:1px solid rgba(29,161,242,0.25);border-radius:8px;padding:10px 12px;margin-bottom:8px;display:none}
+.url-preview-box.show{display:block}
 .composer-actions{display:flex;justify-content:flex-end;gap:8px}
 .btn-cancel{padding:8px 14px;background:transparent;color:var(--muted);border:1px solid var(--border2);border-radius:7px;font-size:12px;cursor:pointer;font-family:'Syne',sans-serif}
 .btn-submit{padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif}
+
+/* POSTS */
 .post-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;transition:border-color .15s}
 .post-card:hover{border-color:var(--border2)}
 .post-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
@@ -77,26 +98,31 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
 .badge-low{background:rgba(255,255,255,0.06);color:var(--muted)}
 .badge-ticker{background:rgba(124,111,255,0.15);color:#9d8fff;cursor:pointer}
 .badge-ticker:hover{background:rgba(124,111,255,0.25)}
-.post-content{font-size:14px;line-height:1.7;margin-bottom:12px;color:var(--text)}
-.post-source{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-bottom:10px;font-family:'DM Mono',monospace}
-.post-source a{color:var(--accent2);text-decoration:none}
+.post-content{font-size:14px;line-height:1.7;margin-bottom:10px;color:var(--text)}
+
 /* TWEET PREVIEW CARD */
-.tweet-card{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;margin-bottom:10px;text-decoration:none;display:block;transition:border-color .15s;cursor:pointer}
-.tweet-card:hover{border-color:rgba(29,161,242,0.4)}
-.tweet-card-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.tweet-card-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#1DA1F2,#0d8bd9);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
-.tweet-card-name{font-size:13px;font-weight:700}
+.tweet-card{display:block;background:var(--bg3);border:1px solid rgba(29,161,242,0.2);border-radius:10px;padding:13px 14px;margin-bottom:10px;text-decoration:none;transition:border-color .15s;cursor:pointer}
+.tweet-card:hover{border-color:rgba(29,161,242,0.5)}
+.tweet-card-header{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.tweet-card-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#1DA1F2,#0d8bd9);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden}
+.tweet-card-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.tweet-card-name{font-size:13px;font-weight:700;color:var(--text)}
 .tweet-card-handle{font-size:11px;color:var(--muted)}
-.tweet-card-x{margin-left:auto;color:#1DA1F2;font-size:16px}
-.tweet-card-text{font-size:13px;line-height:1.6;color:var(--text);margin-bottom:8px}
-.tweet-card-footer{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace}
-.tweet-card-loading{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);padding:8px 0}
-/* URL PREVIEW IN COMPOSER */
-.url-preview{background:var(--bg3);border:1px solid rgba(29,161,242,0.3);border-radius:8px;padding:10px 12px;margin-top:8px;display:none}
-.url-preview.show{display:block}
-.url-preview-loading{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
-.url-preview-content{font-size:12px;color:var(--muted)}
-.url-preview-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
+.tweet-card-x{margin-left:auto;font-size:15px;color:#1DA1F2;flex-shrink:0}
+.tweet-card-text{font-size:13px;line-height:1.6;color:var(--text);margin-bottom:8px;word-break:break-word}
+.tweet-card-media{width:100%;border-radius:7px;margin-bottom:8px;max-height:200px;object-fit:cover;display:block}
+.tweet-card-footer{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;display:flex;align-items:center;gap:8px}
+.tweet-card-loading{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px;padding:4px 0}
+
+/* GENERIC LINK CARD */
+.link-card{display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:11px 13px;margin-bottom:10px;text-decoration:none;transition:border-color .15s}
+.link-card:hover{border-color:var(--border2)}
+.link-card-icon{font-size:22px;flex-shrink:0}
+.link-card-domain{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.link-card-url{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}
+.link-card-arrow{margin-left:auto;color:var(--accent2);font-size:13px;flex-shrink:0}
+
+/* REPLIES */
 .post-actions{display:flex;align-items:center;gap:14px;border-top:1px solid var(--border);padding-top:10px}
 .post-action{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);cursor:pointer;transition:color .15s;background:none;border:none;font-family:'Syne',sans-serif;padding:0}
 .post-action:hover{color:var(--accent2)}
@@ -111,16 +137,21 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
 .reply-input{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;font-family:'Syne',sans-serif;resize:none}
 .reply-input:focus{border-color:var(--accent)}
 .reply-send{padding:8px 12px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;flex-shrink:0}
+
+/* SIDEBAR */
+.feed-layout{display:flex;gap:20px}
+.feed-main{flex:1;min-width:0}
 .sidebar{width:280px;flex-shrink:0}
 .widget{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px}
 .widget-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;font-weight:700}
-.trending-item{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.trending-item{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:opacity .15s}
 .trending-item:last-child{border-bottom:none}
+.trending-item:hover{opacity:.8}
 .trending-sym{font-family:'DM Mono',monospace;font-weight:700;font-size:13px;color:var(--accent2)}
 .trending-co{font-size:11px;color:var(--muted)}
-.trending-count{font-size:11px;color:var(--muted);background:var(--bg3);padding:2px 7px;border-radius:4px}
-.feed-layout{display:flex;gap:20px}
-.feed-main{flex:1;min-width:0}
+.trending-count{font-size:11px;color:var(--muted);background:var(--bg3);padding:2px 7px;border-radius:4px;font-family:'DM Mono',monospace}
+
+/* EMPTY + LOADING */
 .empty-feed{text-align:center;padding:48px 24px;color:var(--muted)}
 .empty-feed-icon{font-size:40px;margin-bottom:12px}
 .empty-feed-title{font-size:16px;font-weight:700;margin-bottom:6px;color:var(--text)}
@@ -128,9 +159,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
 .loading-post{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
 .skeleton{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:4px;height:14px;margin-bottom:8px}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.mini-spin{display:inline-block;width:12px;height:12px;border:2px solid var(--border2);border-top-color:var(--accent2);border-radius:50%;animation:spin .8s linear infinite}
+
 @media(min-width:1024px){.sidebar{display:block}}
 @media(max-width:1023px){.sidebar{display:none}.feed-layout{display:block}}
-@media(max-width:768px){.composer-meta{grid-template-columns:1fr 1fr}.composer-url{grid-column:span 2}}
 </style>
 </head>
 <body>
@@ -138,7 +171,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
 <div class="topnav">
   <a class="topnav-brand" href="community.html">
     <div class="topnav-logo">🏚</div>
-    <div class="topnav-name">Stockhut<span>.io</span></div>
+    <div class="topnav-name">Stockhut<span>.co</span></div>
   </a>
   <div class="topnav-right">
     <div class="user-avatar" id="user-avatar" onclick="toggleDropdown()">?</div>
@@ -148,6 +181,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
       <a class="dd-item" href="community.html">📰 Feed</a>
       <a class="dd-item" href="stock_screener.html">⚡ Screener</a>
       <a class="dd-item" href="stock_screener.html">📋 My Watchlist</a>
+      <a class="dd-item" id="dd-profile" href="profile.html">👤 My Profile</a>
+      <a class="dd-item" href="notifications.html">🔔 Notifications <span id="dd-notif-badge" style="margin-left:auto;background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:8px;display:none">0</span></a>
       <div class="dd-item" id="dd-portfolio" style="display:none" onclick="window.location.href='portfolio_dashboard.html'">📊 My Portfolio</div>
       <div class="dd-item" id="dd-admin" style="display:none" onclick="window.location.href='admin.html'">⚙️ Admin</div>
       <div class="dd-divider"></div>
@@ -162,6 +197,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
   <a class="side-nav-item" href="stock_screener.html"><span class="sni">⚡</span> Screener</a>
   <a class="side-nav-item" href="stock_screener.html"><span class="sni">📋</span> Watchlist</a>
   <div class="side-nav-section">Personal</div>
+  <a class="side-nav-item" href="profile.html"><span class="sni">👤</span> My Profile</a>
+  <a class="side-nav-item" href="notifications.html"><span class="sni">🔔</span> Notifications <span id="sn-notif-badge" style="margin-left:auto;background:var(--red);color:#fff;font-size:10px;padding:1px 5px;border-radius:6px;display:none">0</span></a>
   <a class="side-nav-item" id="sn-portfolio" href="portfolio_dashboard.html" style="display:none"><span class="sni">📊</span> My Portfolio</a>
   <div class="side-nav-section" id="sn-admin-section" style="display:none">Admin</div>
   <a class="side-nav-item" id="sn-admin" href="admin.html" style="display:none"><span class="sni">⚙️</span> Manage Members</a>
@@ -170,18 +207,37 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
 <div class="page-wrap">
   <div class="feed-layout">
     <div class="feed-main">
+
+      <!-- FEED HEADER WITH SEARCH -->
       <div class="feed-header">
         <div class="feed-title">Research Feed</div>
-        <button class="btn-post" onclick="toggleComposer()">+ Post idea</button>
+        <div class="feed-header-right">
+          <div class="feed-search-wrap">
+            <span class="feed-search-icon">🔍</span>
+            <input class="feed-search-input" id="feed-search"
+              placeholder="$ticker or keyword..."
+              oninput="onSearch(this.value)"
+              autocomplete="off">
+            <button class="feed-search-clear" id="search-clear" onclick="clearSearch()">✕</button>
+          </div>
+          <button class="btn-post" onclick="toggleComposer()">+ Post idea</button>
+        </div>
       </div>
-      <div id="ticker-filter-bar" style="display:none;align-items:center;gap:8px;padding:8px 12px;background:rgba(124,111,255,0.08);border:1px solid rgba(124,111,255,0.2);border-radius:8px;margin-bottom:12px;font-size:13px"></div>
+
+      <!-- ACTIVE FILTER BAR -->
+      <div class="filter-bar" id="filter-bar"></div>
+
+      <!-- COMPOSER -->
       <div class="composer" id="composer">
         <div class="composer-top">
           <div class="composer-avatar" id="composer-avatar">?</div>
-          <textarea class="composer-input" id="post-content" placeholder="Share a stock idea, research note or market thought..." rows="3"></textarea>
+          <textarea class="composer-input" id="post-content"
+            placeholder="Share a stock idea, research note or market thought..." rows="3"></textarea>
         </div>
         <div class="composer-meta">
-          <input class="composer-ticker" id="post-ticker" placeholder="$Ticker e.g. RKLB" maxlength="12" oninput="this.value=this.value.toUpperCase()">
+          <input class="composer-ticker" id="post-ticker"
+            placeholder="$Ticker e.g. RKLB" maxlength="12"
+            oninput="this.value=this.value.toUpperCase()">
           <select class="composer-select" id="post-direction">
             <option value="">Direction</option>
             <option value="bullish">🟢 Bullish</option>
@@ -194,35 +250,40 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Syne',
             <option value="medium">⚡ Medium</option>
             <option value="low">💧 Low</option>
           </select>
-          <input class="composer-url" id="post-url" placeholder="Source URL (optional — paste X/Twitter or news link)" type="url" oninput="onUrlInput(this.value)">
+          <input class="composer-url" id="post-url"
+            placeholder="Source URL — paste X/Twitter or news link (optional)"
+            type="url" oninput="onUrlInput(this.value)">
         </div>
-        <div class="url-preview" id="url-preview"></div>
+        <div class="url-preview-box" id="url-preview-box"></div>
         <div class="composer-actions">
-          <button class="btn-cancel" onclick="toggleComposer()">Cancel</button>
+          <button class="btn-cancel" onclick="closeComposer()">Cancel</button>
           <button class="btn-submit" onclick="submitPost()">Post idea →</button>
         </div>
       </div>
+
+      <!-- FEED -->
       <div id="feed-container">
         <div class="loading-post"><div class="skeleton" style="width:60%"></div><div class="skeleton" style="width:90%"></div><div class="skeleton" style="width:75%"></div></div>
         <div class="loading-post"><div class="skeleton" style="width:50%"></div><div class="skeleton" style="width:85%"></div><div class="skeleton" style="width:65%"></div></div>
       </div>
     </div>
+
+    <!-- SIDEBAR -->
     <div class="sidebar">
       <div class="widget">
         <div class="widget-title">Trending Tickers</div>
         <div id="trending-tickers">
-          <div class="trending-item"><div><div class="trending-sym">RKLB</div><div class="trending-co">Rocket Lab</div></div><span class="trending-count">5 posts</span></div>
-          <div class="trending-item"><div><div class="trending-sym">PLTR</div><div class="trending-co">Palantir</div></div><span class="trending-count">4 posts</span></div>
-          <div class="trending-item"><div><div class="trending-sym">NBIS</div><div class="trending-co">Nebius NV</div></div><span class="trending-count">3 posts</span></div>
-          <div class="trending-item"><div><div class="trending-sym">MU</div><div class="trending-co">Micron</div></div><span class="trending-count">2 posts</span></div>
+          <div style="font-size:12px;color:var(--muted);padding:8px 0">Loading...</div>
         </div>
       </div>
       <div class="widget">
         <div class="widget-title">Community</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.8">
+        <div style="font-size:13px;color:var(--muted);line-height:1.9">
           <div>👥 Members: <span style="color:var(--text);font-weight:600" id="member-count">—</span></div>
           <div>💡 Ideas posted: <span style="color:var(--text);font-weight:600" id="post-count">—</span></div>
-          <div style="margin-top:10px;font-size:11px;border-top:1px solid var(--border);padding-top:10px">Private · Invite only · 🇬🇧 UK based</div>
+          <div style="margin-top:10px;font-size:11px;border-top:1px solid var(--border);padding-top:10px">
+            Private · Invite only · 🇬🇧 UK based
+          </div>
         </div>
       </div>
     </div>
@@ -243,292 +304,449 @@ var _supa = window.supabase.createClient(
 );
 
 var OWNER_EMAIL = 'brendon.knoetze@gmail.com';
+var PROXY = 'https://api.allorigins.win/get?url=';
 var currentUser = null;
+var allPosts = [];
+var activeFilter = null;
+var searchTimer = null;
+var urlTimer = null;
 
-function toggleDropdown(){document.getElementById('user-dropdown').classList.toggle('show')}
-document.addEventListener('click',function(e){if(!e.target.closest('.topnav-right'))document.getElementById('user-dropdown').classList.remove('show')});
-function toggleComposer(){
-  document.getElementById('composer').classList.toggle('show');
-  // Clear preview when closing
-  if(!document.getElementById('composer').classList.contains('show')){
-    document.getElementById('url-preview').classList.remove('show');
-    document.getElementById('url-preview').innerHTML='';
-  }
-}
-
-async function init(){
+// ── INIT ──
+async function init() {
   var r = await _supa.auth.getSession();
-  if(!r.data.session){ window.location.href='login.html'; return; }
+  if (!r.data.session) { window.location.href = 'login.html'; return; }
   currentUser = r.data.session.user;
-  var name = currentUser.user_metadata && currentUser.user_metadata.full_name ? currentUser.user_metadata.full_name : currentUser.email;
-  var initials = name.split(' ').map(function(n){return n[0]}).join('').toUpperCase().slice(0,2);
+  var name = (currentUser.user_metadata && currentUser.user_metadata.full_name) ? currentUser.user_metadata.full_name : currentUser.email;
+  var initials = name.split(' ').map(function(n){ return n[0]; }).join('').toUpperCase().slice(0,2);
   document.getElementById('user-avatar').textContent = initials;
   document.getElementById('composer-avatar').textContent = initials;
   document.getElementById('dd-name').textContent = name.split(' ')[0];
-  if(currentUser.email === OWNER_EMAIL){
+  if (currentUser.email === OWNER_EMAIL) {
     ['dd-portfolio','dd-admin','sn-portfolio','sn-admin','sn-admin-section'].forEach(function(id){
-      var el=document.getElementById(id); if(el)el.style.display='flex';
+      var el = document.getElementById(id); if (el) el.style.display = 'flex';
     });
     var bp = document.getElementById('bn-portfolio');
-    if(bp) bp.style.display='flex';
+    if (bp) bp.style.display = 'flex';
   }
   loadFeed();
   loadStats();
+  checkNotifications();
 }
 
-async function loadFeed(tickerFilter){
-  var query = _supa.from('feed_posts').select('*,profiles(username,full_name)').order('created_at',{ascending:false}).limit(50);
-  if(tickerFilter) query = query.eq('ticker', tickerFilter);
-  var r = await query;
+async function checkNotifications() {
+  var myPostsR = await _supa.from('feed_posts').select('id').eq('user_id', currentUser.id);
+  var myPosts = myPostsR.data || [];
+  if (!myPosts.length) return;
+  var postIds = myPosts.map(function(p){ return p.id; });
+  var repliesR = await _supa.from('feed_replies').select('id').in('post_id', postIds).neq('user_id', currentUser.id);
+  var replies = repliesR.data || [];
+  if (!replies.length) return;
+  var readKey = 'sh_notif_read_' + currentUser.id;
+  var readIds = JSON.parse(localStorage.getItem(readKey) || '[]');
+  var unread = replies.filter(function(r){ return !readIds.includes(r.id); }).length;
+  if (unread > 0) {
+    ['dd-notif-badge','sn-notif-badge'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) { el.textContent = unread; el.style.display = 'inline'; }
+    });
+  }
+}
+
+// ── DROPDOWN ──
+function toggleDropdown() { document.getElementById('user-dropdown').classList.toggle('show'); }
+document.addEventListener('click', function(e){ if (!e.target.closest('.topnav-right')) document.getElementById('user-dropdown').classList.remove('show'); });
+
+// ── COMPOSER ──
+function toggleComposer() { document.getElementById('composer').classList.toggle('show'); }
+function closeComposer() {
+  document.getElementById('composer').classList.remove('show');
+  document.getElementById('url-preview-box').classList.remove('show');
+  document.getElementById('url-preview-box').innerHTML = '';
+  document.getElementById('post-url').value = '';
+}
+
+// ── LOAD FEED ──
+async function loadFeed() {
+  var r = await _supa.from('feed_posts').select('*,profiles(username,full_name)').order('created_at',{ascending:false}).limit(100);
+  if (r.error || !r.data) { showEmpty('Error loading feed'); return; }
+  allPosts = r.data;
+  renderFeed(allPosts);
+  document.getElementById('post-count').textContent = allPosts.length;
+}
+
+function renderFeed(posts) {
   var container = document.getElementById('feed-container');
-  if(r.error || !r.data || !r.data.length){
-    var msg = tickerFilter ? 'No posts for $'+tickerFilter+' yet' : 'No ideas yet';
-    var sub = tickerFilter ? 'Be the first to post about this stock' : 'Be the first to post a stock idea.';
-    container.innerHTML='<div class="empty-feed"><div class="empty-feed-icon">💡</div><div class="empty-feed-title">'+msg+'</div><div class="empty-feed-sub">'+sub+'</div></div>';
+  if (!posts.length) {
+    var msg = activeFilter ? 'No posts for ' + activeFilter : (document.getElementById('feed-search').value ? 'No results found' : 'No ideas yet');
+    var sub = activeFilter ? 'Be the first to post about this stock' : 'Click + Post idea to share your first research note';
+    container.innerHTML = '<div class="empty-feed"><div class="empty-feed-icon">💡</div><div class="empty-feed-title">'+msg+'</div><div class="empty-feed-sub">'+sub+'</div></div>';
     return;
   }
-  container.innerHTML = r.data.map(function(p){return renderPost(p)}).join('');
-  document.getElementById('post-count').textContent = r.data.length;
+  container.innerHTML = posts.map(renderPost).join('');
 }
 
-function renderPost(p){
-  var name = (p.profiles && p.profiles.full_name) ? p.profiles.full_name : ((p.profiles && p.profiles.username) ? p.profiles.username : 'Member');
-  var initials = name.split(' ').map(function(n){return n[0]}).join('').toUpperCase().slice(0,2);
-  var timeAgo = getTimeAgo(p.created_at);
-  var dirBadge = p.direction ? '<span class="badge badge-'+(p.direction==='bullish'?'bull':p.direction==='bearish'?'bear':'neu')+'">'+(p.direction==='bullish'?'🟢 Bullish':p.direction==='bearish'?'🔴 Bearish':'🟡 Neutral')+'</span>' : '';
-  var convBadge = p.conviction ? '<span class="badge badge-'+p.conviction+'">'+(p.conviction==='high'?'🔥 High':p.conviction==='medium'?'⚡ Medium':'💧 Low')+'</span>' : '';
-  var tickerBadge = p.ticker ? '<span class="badge badge-ticker" onclick="window.open(\'https://finance.yahoo.com/quote/'+p.ticker+'\',\'_blank\')">$'+p.ticker+'</span>' : '';
-  var sourceHtml = p.source_url ? renderSourceCard(p.source_url) : '';
-  var deleteBtn = (currentUser && p.user_id === currentUser.id) ? '<button class="post-action" style="color:var(--red);margin-left:auto" onclick="deletePost(\''+p.id+'\')">🗑 Delete</button>' : '';
-  return '<div class="post-card" id="post-'+p.id+'">'+
-    '<div class="post-header"><div class="post-user"><div class="post-avatar">'+initials+'</div><div><div class="post-name">@'+(p.profiles&&p.profiles.username?p.profiles.username:'member')+'</div><div class="post-time">'+timeAgo+'</div></div></div></div>'+
-    '<div class="post-badges">'+tickerBadge+dirBadge+convBadge+'</div>'+
-    '<div class="post-content">'+escapeHtml(p.content)+'</div>'+
-    sourceHtml+
-    '<div class="post-actions"><button class="post-action" onclick="toggleReplies(\''+p.id+'\')">💬 Reply</button>'+deleteBtn+'</div>'+
-    '<div class="replies" id="replies-'+p.id+'">'+
-      '<div id="replies-list-'+p.id+'"></div>'+
-      '<div class="reply-input-row"><textarea class="reply-input" id="reply-input-'+p.id+'" placeholder="Add a reply..." rows="2"></textarea><button class="reply-send" onclick="submitReply(\''+p.id+'\')">Send</button></div>'+
-    '</div>'+
-  '</div>';
+function showEmpty(msg) {
+  document.getElementById('feed-container').innerHTML = '<div class="empty-feed"><div class="empty-feed-icon">💡</div><div class="empty-feed-title">'+msg+'</div></div>';
 }
 
-async function submitPost(){
-  var content = document.getElementById('post-content').value.trim();
-  if(!content) return;
-  var ticker = document.getElementById('post-ticker').value.replace('$','').trim() || null;
-  var direction = document.getElementById('post-direction').value || null;
-  var conviction = document.getElementById('post-conviction').value || null;
-  var sourceUrl = document.getElementById('post-url').value.trim() || null;
-  var sourceType = sourceUrl ? (sourceUrl.includes('twitter.com')||sourceUrl.includes('x.com') ? 'twitter' : 'news') : 'manual';
-  var r = await _supa.from('feed_posts').insert({user_id:currentUser.id,content:content,ticker:ticker,direction:direction,conviction:conviction,source_url:sourceUrl,source_type:sourceType}).select('*,profiles(username,full_name)').single();
-  if(!r.error && r.data){
-    var container = document.getElementById('feed-container');
-    var empty = container.querySelector('.empty-feed');
-    if(empty) container.innerHTML = '';
-    container.insertAdjacentHTML('afterbegin', renderPost(r.data));
-    document.getElementById('post-content').value='';
-    document.getElementById('post-ticker').value='';
-    document.getElementById('post-direction').value='';
-    document.getElementById('post-conviction').value='';
-    document.getElementById('post-url').value='';
-    toggleComposer();
-    loadStats(); // refresh trending tickers
-  }
+// ── SEARCH ──
+function onSearch(val) {
+  clearTimeout(searchTimer);
+  var clearBtn = document.getElementById('search-clear');
+  clearBtn.style.display = val ? 'block' : 'none';
+  searchTimer = setTimeout(function(){ doSearch(val); }, 300);
 }
 
-async function toggleReplies(postId){
-  var el = document.getElementById('replies-'+postId);
-  el.classList.toggle('show');
-  if(el.classList.contains('show')) loadReplies(postId);
+function doSearch(val) {
+  val = val.trim().toLowerCase();
+  if (!val) { renderFeed(allPosts); updateFilterBar(null, null); return; }
+  var isTicker = val.startsWith('$');
+  var term = isTicker ? val.slice(1).toUpperCase() : val;
+  var filtered = allPosts.filter(function(p){
+    if (isTicker) return p.ticker && p.ticker.toUpperCase() === term;
+    return (p.content && p.content.toLowerCase().includes(term)) ||
+           (p.ticker && p.ticker.toLowerCase().includes(term));
+  });
+  renderFeed(filtered);
+  updateFilterBar('search', val);
 }
 
-async function loadReplies(postId){
-  var r = await _supa.from('feed_replies').select('*,profiles(username,full_name)').eq('post_id',postId).order('created_at',{ascending:true});
-  var listEl = document.getElementById('replies-list-'+postId);
-  if(!r.data||!r.data.length){ listEl.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0 8px">No replies yet</div>'; return; }
-  listEl.innerHTML = r.data.map(function(rp){
-    var rName = (rp.profiles&&rp.profiles.full_name) ? rp.profiles.full_name : 'Member';
-    var rInit = rName.split(' ').map(function(n){return n[0]}).join('').toUpperCase().slice(0,2);
-    return '<div class="reply"><div class="reply-avatar">'+rInit+'</div><div class="reply-bubble"><div class="reply-meta">@'+(rp.profiles&&rp.profiles.username?rp.profiles.username:'member')+' · '+getTimeAgo(rp.created_at)+'</div><div class="reply-text">'+escapeHtml(rp.content)+'</div></div></div>';
-  }).join('');
+function clearSearch() {
+  document.getElementById('feed-search').value = '';
+  document.getElementById('search-clear').style.display = 'none';
+  renderFeed(allPosts);
+  updateFilterBar(null, null);
 }
 
-async function submitReply(postId){
-  var input = document.getElementById('reply-input-'+postId);
-  var content = input.value.trim(); if(!content) return;
-  var r = await _supa.from('feed_replies').insert({post_id:postId,user_id:currentUser.id,content:content});
-  if(!r.error){ input.value=''; loadReplies(postId); }
-}
-
-async function deletePost(postId){
-  if(!confirm('Delete this post?')) return;
-  await _supa.from('feed_posts').delete().eq('id',postId).eq('user_id',currentUser.id);
-  var el = document.getElementById('post-'+postId);
-  if(el) el.remove();
-}
-
-async function loadStats(){
-  // Member count
-  var r = await _supa.from('profiles').select('*',{count:'exact',head:true});
-  document.getElementById('member-count').textContent = r.count || 1;
-
-  // Real trending tickers from post data
-  var tp = await _supa.from('feed_posts').select('ticker').not('ticker','is',null);
-  if(tp.data && tp.data.length){
-    // Count occurrences of each ticker
-    var counts = {};
-    tp.data.forEach(function(p){
-      if(p.ticker){
-        counts[p.ticker] = (counts[p.ticker]||0) + 1;
-      }
-    });
-    // Sort by count descending
-    var sorted = Object.keys(counts).sort(function(a,b){return counts[b]-counts[a]}).slice(0,6);
-    var el = document.getElementById('trending-tickers');
-    if(sorted.length){
-      el.innerHTML = sorted.map(function(sym){
-        var count = counts[sym];
-        return '<div class="trending-item" onclick="filterByTicker(\''+sym+'\')">' +
-          '<div><div class="trending-sym">'+sym+'</div>' +
-          '<div class="trending-co">'+count+' '+(count===1?'post':'posts')+'</div></div>' +
-          '<span class="trending-count">'+count+'</span>' +
-        '</div>';
-      }).join('');
-    } else {
-      el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0">Post ideas with tickers to see trending stocks</div>';
-    }
-  } else {
-    document.getElementById('trending-tickers').innerHTML =
-      '<div style="font-size:12px;color:var(--muted);padding:8px 0">Post ideas with tickers to see trending stocks</div>';
-  }
-}
-
-// Filter feed by ticker
+// ── TICKER FILTER (sidebar click) ──
 var activeTickerFilter = null;
-function filterByTicker(sym){
-  if(activeTickerFilter === sym){
-    // Toggle off
+function filterByTicker(sym) {
+  if (activeTickerFilter === sym) {
     activeTickerFilter = null;
-    document.getElementById('ticker-filter-bar').style.display = 'none';
-    loadFeed();
+    document.getElementById('feed-search').value = '';
+    renderFeed(allPosts);
+    updateFilterBar(null, null);
   } else {
     activeTickerFilter = sym;
-    var bar = document.getElementById('ticker-filter-bar');
-    bar.style.display = 'flex';
-    bar.innerHTML = '<span style="font-size:12px;color:var(--muted)">Showing posts for</span> ' +
-      '<span class="badge badge-ticker">$'+sym+'</span> ' +
-      '<button onclick="filterByTicker(\''+sym+'\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;margin-left:auto">✕ Clear filter</button>';
-    loadFeed(sym);
+    document.getElementById('feed-search').value = '$'+sym;
+    document.getElementById('search-clear').style.display = 'block';
+    var filtered = allPosts.filter(function(p){ return p.ticker && p.ticker.toUpperCase() === sym; });
+    renderFeed(filtered);
+    updateFilterBar('ticker', sym);
   }
 }
 
-function getTimeAgo(ts){
-  var s = Math.floor((Date.now()-new Date(ts))/1000);
-  if(s<60) return 'just now'; if(s<3600) return Math.floor(s/60)+'m ago';
-  if(s<86400) return Math.floor(s/3600)+'h ago'; return Math.floor(s/86400)+'d ago';
-}
-function escapeHtml(t){
-  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-}
-// ── URL / TWEET PREVIEW ──
-var urlPreviewTimer = null;
-function onUrlInput(val){
-  clearTimeout(urlPreviewTimer);
-  var preview = document.getElementById('url-preview');
-  if(!val || !val.startsWith('http')){ preview.classList.remove('show'); preview.innerHTML=''; return; }
-  urlPreviewTimer = setTimeout(function(){ fetchUrlPreview(val); }, 600);
+function updateFilterBar(type, val) {
+  var bar = document.getElementById('filter-bar');
+  if (!type) { bar.style.display = 'none'; bar.innerHTML = ''; activeTickerFilter = null; return; }
+  bar.style.display = 'flex';
+  var label = type === 'ticker' ? 'Showing posts for <span class="badge badge-ticker" style="margin:0 4px">$'+val+'</span>' : 'Search results for <strong style="margin-left:4px">'+val+'</strong>';
+  bar.innerHTML = '<span style="font-size:12px;color:var(--muted)">'+label+'</span><button onclick="clearSearch()" style="margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px">✕ Clear</button>';
 }
 
-function isTweetUrl(url){
-  return url.includes('twitter.com') || url.includes('x.com') || url.includes('t.co');
-}
+// ── RENDER POST ──
+function renderPost(p) {
+  var name = (p.profiles && p.profiles.full_name) ? p.profiles.full_name : ((p.profiles && p.profiles.username) ? p.profiles.username : 'Member');
+  var initials = name.split(' ').map(function(n){ return n[0]; }).join('').toUpperCase().slice(0,2);
+  var timeAgo = getTimeAgo(p.created_at);
+  var username = p.profiles && p.profiles.username ? p.profiles.username : 'member';
+  var dirBadge = p.direction ? '<span class="badge badge-'+(p.direction==='bullish'?'bull':p.direction==='bearish'?'bear':'neu')+'">'+(p.direction==='bullish'?'🟢 Bullish':p.direction==='bearish'?'🔴 Bearish':'🟡 Neutral')+'</span>' : '';
+  var convBadge = p.conviction ? '<span class="badge badge-'+p.conviction+'">'+(p.conviction==='high'?'🔥 High':p.conviction==='medium'?'⚡ Medium':'💧 Low')+'</span>' : '';
+  var tickerBadge = p.ticker ? '<span class="badge badge-ticker" onclick="filterByTicker(\''+p.ticker+'\')">$'+p.ticker+'</span>' : '';
+  var sourceHtml = p.source_url ? renderSourceCard(p.source_url) : '';
+  var deleteBtn = (currentUser && p.user_id === currentUser.id) ? '<button class="post-action" style="color:var(--red);margin-left:auto" onclick="deletePost(\''+p.id+'\')">🗑 Delete</button>' : '';
 
-async function fetchUrlPreview(url){
-  var preview = document.getElementById('url-preview');
-  preview.classList.add('show');
-  preview.innerHTML = '<div class="url-preview-loading"><span>⏳</span> Loading preview...</div>';
-
-  if(isTweetUrl(url)){
-    // Extract tweet ID from URL
-    var tweetId = extractTweetId(url);
-    if(tweetId){
-      preview.innerHTML = renderTweetPreview(url, tweetId);
-    } else {
-      preview.innerHTML = renderLinkPreview(url);
-    }
-  } else {
-    preview.innerHTML = renderLinkPreview(url);
-  }
-}
-
-function extractTweetId(url){
-  var match = url.match(/status\/(\d+)/);
-  return match ? match[1] : null;
-}
-
-function extractHandle(url){
-  var match = url.match(/(?:twitter\.com|x\.com)\/([^\/\?]+)/);
-  return match ? match[1] : null;
-}
-
-function renderTweetPreview(url, tweetId){
-  var handle = extractHandle(url) || 'twitter';
-  var initials = handle.slice(0,2).toUpperCase();
-  return '<div class="tweet-card" onclick="window.open(\''+url+'\',\'_blank\')">' +
-    '<div class="tweet-card-header">' +
-      '<div class="tweet-card-avatar">'+initials+'</div>' +
-      '<div><div class="tweet-card-name">@'+handle+'</div><div class="tweet-card-handle">on X / Twitter</div></div>' +
-      '<div class="tweet-card-x">𝕏</div>' +
+  return '<div class="post-card" id="post-'+p.id+'">' +
+    '<div class="post-header"><div class="post-user">' +
+      '<div class="post-avatar">'+initials+'</div>' +
+      '<div><div class="post-name '<div><div class="post-name"><a href="profile.html?u='+username+'" style="color:inherit;text-decoration:none" onmouseover="this.style.color=\'var(--accent2)\'" onmouseout="this.style.color=\'inherit\'">@'+username+'</a></div><div class="post-time">'+timeAgo+'</div><'</div></div>' +
+    '</div></div>' +
+    '<div class="post-badges">'+tickerBadge+dirBadge+convBadge+'</div>' +
+    '<div class="post-content">'+escapeHtml(p.content)+'</div>' +
+    sourceHtml +
+    '<div class="post-actions">' +
+      '<button class="post-action" onclick="toggleReplies(\''+p.id+'\')">💬 Reply</button>' +
+      deleteBtn +
     '</div>' +
-    '<div class="tweet-card-text">Tweet ID: '+tweetId+' — click to view on X</div>' +
-    '<div class="tweet-card-footer">x.com · '+url.slice(0,50)+(url.length>50?'...':'')+'</div>' +
+    '<div class="replies" id="replies-'+p.id+'">' +
+      '<div id="replies-list-'+p.id+'"></div>' +
+      '<div class="reply-input-row">' +
+        '<textarea class="reply-input" id="reply-input-'+p.id+'" placeholder="Add a reply..." rows="2"></textarea>' +
+        '<button class="reply-send" onclick="submitReply(\''+p.id+'\')">Send</button>' +
+      '</div>' +
+    '</div>' +
   '</div>';
 }
 
-function renderLinkPreview(url){
-  var domain = '';
-  try { domain = new URL(url).hostname.replace('www.',''); } catch(e){ domain = url; }
-  var icon = url.includes('youtube') ? '▶️' : url.includes('reddit') ? '🔴' : url.includes('bloomberg') ? '📊' : url.includes('reuters') ? '📰' : '🔗';
-  return '<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)">' +
-    '<span style="font-size:16px">'+icon+'</span>' +
-    '<div><div class="url-preview-title">'+domain+'</div>' +
-    '<div>'+url.slice(0,60)+(url.length>60?'...':'')+'</div></div>' +
-    '<a href="'+url+'" target="_blank" style="margin-left:auto;color:var(--accent2);font-size:11px;text-decoration:none">Open ↗</a>' +
-  '</div>';
+// ── SOURCE CARD RENDERER ──
+function isTweetUrl(url) {
+  return url.includes('twitter.com') || url.includes('x.com');
 }
 
-// Render tweet card in post (shown after post is saved)
-function renderSourceCard(url){
-  if(!url) return '';
-  if(isTweetUrl(url)){
-    var tweetId = extractTweetId(url);
+function extractHandle(url) {
+  var m = url.match(/(?:twitter\.com|x\.com)\/([^\/\?]+)/);
+  return (m && m[1] !== 'i') ? m[1] : null;
+}
+
+function extractTweetId(url) {
+  var m = url.match(/status\/(\d+)/);
+  return m ? m[1] : null;
+}
+
+function getDomain(url) {
+  try { return new URL(url).hostname.replace('www.',''); } catch(e){ return url; }
+}
+
+function getLinkIcon(url) {
+  if (url.includes('youtube') || url.includes('youtu.be')) return '▶️';
+  if (url.includes('reddit')) return '🔴';
+  if (url.includes('bloomberg')) return '📊';
+  if (url.includes('reuters')) return '📰';
+  if (url.includes('ft.com')) return '📰';
+  if (url.includes('wsj.com')) return '📰';
+  if (url.includes('seekingalpha')) return '📈';
+  if (url.includes('github')) return '🐙';
+  return '🔗';
+}
+
+function renderSourceCard(url) {
+  if (!url) return '';
+  if (isTweetUrl(url)) {
     var handle = extractHandle(url) || 'twitter';
+    var tweetId = extractTweetId(url);
     var initials = handle.slice(0,2).toUpperCase();
-    return '<a class="tweet-card" href="'+url+'" target="_blank" rel="noopener">' +
+    // Tweet card with oEmbed content loaded async
+    var cardId = 'tweet-' + (tweetId || Math.random().toString(36).slice(2));
+    // Trigger async load after render
+    setTimeout(function(){ loadTweetContent(cardId, url, handle, tweetId); }, 50);
+    return '<a class="tweet-card" id="'+cardId+'" href="'+url+'" target="_blank" rel="noopener" onclick="event.preventDefault();window.open(\''+url+'\',\'_blank\')">' +
       '<div class="tweet-card-header">' +
         '<div class="tweet-card-avatar">'+initials+'</div>' +
         '<div><div class="tweet-card-name">@'+handle+'</div><div class="tweet-card-handle">on X / Twitter</div></div>' +
         '<div class="tweet-card-x">𝕏</div>' +
       '</div>' +
-      '<div class="tweet-card-text">View tweet by @'+handle+(tweetId?' · ID: '+tweetId:'')+'</div>' +
+      '<div class="tweet-card-loading"><span class="mini-spin"></span> Loading tweet...</div>' +
       '<div class="tweet-card-footer">'+url.slice(0,55)+(url.length>55?'...':'')+'</div>' +
     '</a>';
   }
   // Generic link card
-  var domain = '';
-  try { domain = new URL(url).hostname.replace('www.',''); } catch(e){ domain = url; }
-  return '<a class="tweet-card" href="'+url+'" target="_blank" rel="noopener" style="border-color:var(--border2)">' +
-    '<div style="display:flex;align-items:center;gap:8px">' +
-      '<span style="font-size:20px">🔗</span>' +
-      '<div><div class="tweet-card-name">'+domain+'</div>' +
-      '<div class="tweet-card-footer">'+url.slice(0,55)+(url.length>55?'...':'')+'</div></div>' +
-      '<span style="margin-left:auto;color:var(--accent2);font-size:11px">Open ↗</span>' +
-    '</div>' +
+  var domain = getDomain(url);
+  var icon = getLinkIcon(url);
+  return '<a class="link-card" href="'+url+'" target="_blank" rel="noopener">' +
+    '<div class="link-card-icon">'+icon+'</div>' +
+    '<div style="min-width:0"><div class="link-card-domain">'+domain+'</div><div class="link-card-url">'+url+'</div></div>' +
+    '<div class="link-card-arrow">↗</div>' +
   '</a>';
 }
 
-async function doSignOut(){ await _supa.auth.signOut(); window.location.href='login.html'; }
+// ── LOAD TWEET CONTENT VIA OEMBED ──
+async function loadTweetContent(cardId, url, handle, tweetId) {
+  var card = document.getElementById(cardId);
+  if (!card) return;
+  try {
+    var oembedUrl = 'https://publish.twitter.com/oembed?url='+encodeURIComponent(url)+'&omit_script=true&dnt=true';
+    var resp = await fetch(PROXY + encodeURIComponent(oembedUrl), {signal: AbortSignal.timeout(8000)});
+    if (!resp.ok) throw new Error('fetch failed');
+    var json = await resp.json();
+    var data = JSON.parse(json.contents);
+    if (!data || !data.html) throw new Error('no content');
+
+    // Extract text from oEmbed HTML
+    var tmp = document.createElement('div');
+    tmp.innerHTML = data.html;
+    var paragraphs = tmp.querySelectorAll('p');
+    var tweetText = '';
+    if (paragraphs.length > 0) {
+      tweetText = paragraphs[0].textContent.trim();
+      // Remove trailing "— @handle (date)" line
+      tweetText = tweetText.replace(/— @\S+.*$/,'').trim();
+    }
+    var authorName = data.author_name || ('@'+handle);
+
+    // Update the loading spinner with real content
+    var loadingEl = card.querySelector('.tweet-card-loading');
+    if (loadingEl && tweetText) {
+      loadingEl.outerHTML = '<div class="tweet-card-text">'+escapeHtml(tweetText)+'</div>';
+    } else if (loadingEl) {
+      loadingEl.outerHTML = '<div class="tweet-card-text" style="color:var(--muted)">View tweet by @'+handle+'</div>';
+    }
+    // Update name
+    var nameEl = card.querySelector('.tweet-card-name');
+    if (nameEl) nameEl.textContent = authorName;
+
+  } catch(e) {
+    // Fallback — show plain text
+    var loadingEl = card ? card.querySelector('.tweet-card-loading') : null;
+    if (loadingEl) {
+      loadingEl.outerHTML = '<div class="tweet-card-text" style="color:var(--muted)">View tweet by @'+handle+(tweetId?' · '+tweetId.slice(-6):'')+'</div>';
+    }
+  }
+}
+
+// ── URL PREVIEW IN COMPOSER ──
+function onUrlInput(val) {
+  clearTimeout(urlTimer);
+  var box = document.getElementById('url-preview-box');
+  if (!val || !val.startsWith('http')) { box.classList.remove('show'); box.innerHTML=''; return; }
+  box.classList.add('show');
+  box.innerHTML = '<div class="tweet-card-loading"><span class="mini-spin"></span> Fetching preview...</div>';
+  urlTimer = setTimeout(function(){ showComposerPreview(val); }, 700);
+}
+
+async function showComposerPreview(url) {
+  var box = document.getElementById('url-preview-box');
+  if (!box) return;
+  if (isTweetUrl(url)) {
+    var handle = extractHandle(url) || 'twitter';
+    var tweetId = extractTweetId(url);
+    var initials = handle.slice(0,2).toUpperCase();
+    try {
+      var oembedUrl = 'https://publish.twitter.com/oembed?url='+encodeURIComponent(url)+'&omit_script=true&dnt=true';
+      var resp = await fetch(PROXY + encodeURIComponent(oembedUrl), {signal: AbortSignal.timeout(8000)});
+      var json = await resp.json();
+      var data = JSON.parse(json.contents);
+      var tmp = document.createElement('div');
+      tmp.innerHTML = data.html || '';
+      var paragraphs = tmp.querySelectorAll('p');
+      var tweetText = paragraphs.length ? paragraphs[0].textContent.replace(/— @\S+.*$/,'').trim() : '';
+      var authorName = data.author_name || ('@'+handle);
+      box.innerHTML =
+        '<div class="tweet-card-header" style="margin-bottom:8px">' +
+          '<div class="tweet-card-avatar">'+initials+'</div>' +
+          '<div><div class="tweet-card-name">'+escapeHtml(authorName)+'</div><div class="tweet-card-handle">@'+handle+' on X</div></div>' +
+          '<div class="tweet-card-x">𝕏</div>' +
+        '</div>' +
+        (tweetText ? '<div style="font-size:12px;line-height:1.6;color:var(--text);margin-bottom:6px">'+escapeHtml(tweetText)+'</div>' : '') +
+        '<div style="font-size:10px;color:var(--muted)">'+url.slice(0,60)+'</div>';
+    } catch(e) {
+      box.innerHTML =
+        '<div class="tweet-card-header">' +
+          '<div class="tweet-card-avatar">'+initials+'</div>' +
+          '<div><div class="tweet-card-name">@'+handle+'</div><div class="tweet-card-handle">on X / Twitter</div></div>' +
+          '<div class="tweet-card-x">𝕏</div>' +
+        '</div>' +
+        '<div style="font-size:12px;color:var(--muted)">Tweet preview unavailable — will still save the link</div>';
+    }
+  } else {
+    var domain = getDomain(url);
+    var icon = getLinkIcon(url);
+    box.innerHTML =
+      '<div style="display:flex;align-items:center;gap:8px">' +
+        '<span style="font-size:18px">'+icon+'</span>' +
+        '<div><div style="font-size:13px;font-weight:600">'+domain+'</div>' +
+        '<div style="font-size:11px;color:var(--muted)">'+url.slice(0,60)+(url.length>60?'...':'')+'</div></div>' +
+      '</div>';
+  }
+}
+
+// ── SUBMIT POST ──
+async function submitPost() {
+  var content = document.getElementById('post-content').value.trim();
+  if (!content) return;
+  var ticker = document.getElementById('post-ticker').value.replace('$','').trim() || null;
+  var direction = document.getElementById('post-direction').value || null;
+  var conviction = document.getElementById('post-conviction').value || null;
+  var sourceUrl = document.getElementById('post-url').value.trim() || null;
+  var sourceType = sourceUrl ? (isTweetUrl(sourceUrl) ? 'twitter' : 'news') : 'manual';
+
+  var r = await _supa.from('feed_posts').insert({
+    user_id: currentUser.id, content: content, ticker: ticker,
+    direction: direction, conviction: conviction,
+    source_url: sourceUrl, source_type: sourceType
+  }).select('*,profiles(username,full_name)').single();
+
+  if (!r.error && r.data) {
+    allPosts.unshift(r.data);
+    var container = document.getElementById('feed-container');
+    var empty = container.querySelector('.empty-feed');
+    if (empty) container.innerHTML = '';
+    container.insertAdjacentHTML('afterbegin', renderPost(r.data));
+    document.getElementById('post-content').value = '';
+    document.getElementById('post-ticker').value = '';
+    document.getElementById('post-direction').value = '';
+    document.getElementById('post-conviction').value = '';
+    document.getElementById('post-url').value = '';
+    document.getElementById('post-count').textContent = allPosts.length;
+    closeComposer();
+    loadStats();
+  }
+}
+
+// ── REPLIES ──
+async function toggleReplies(postId) {
+  var el = document.getElementById('replies-'+postId);
+  el.classList.toggle('show');
+  if (el.classList.contains('show')) loadReplies(postId);
+}
+
+async function loadReplies(postId) {
+  var r = await _supa.from('feed_replies').select('*,profiles(username,full_name)').eq('post_id',postId).order('created_at',{ascending:true});
+  var listEl = document.getElementById('replies-list-'+postId);
+  if (!r.data || !r.data.length) { listEl.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0 8px">No replies yet — be the first</div>'; return; }
+  listEl.innerHTML = r.data.map(function(rp){
+    var rName = (rp.profiles && rp.profiles.full_name) ? rp.profiles.full_name : 'Member';
+    var rInit = rName.split(' ').map(function(n){ return n[0]; }).join('').toUpperCase().slice(0,2);
+    return '<div class="reply"><div class="reply-avatar">'+rInit+'</div>' +
+      '<div class="reply-bubble"><div class="reply-meta">@'+(rp.profiles&&rp.profiles.username?rp.profiles.username:'member')+' · '+getTimeAgo(rp.created_at)+'</div>' +
+      '<div class="reply-text">'+escapeHtml(rp.content)+'</div></div></div>';
+  }).join('');
+}
+
+async function submitReply(postId) {
+  var input = document.getElementById('reply-input-'+postId);
+  var content = input.value.trim();
+  if (!content) return;
+  var r = await _supa.from('feed_replies').insert({post_id:postId, user_id:currentUser.id, content:content});
+  if (!r.error) { input.value=''; loadReplies(postId); }
+}
+
+// ── DELETE ──
+async function deletePost(postId) {
+  if (!confirm('Delete this post?')) return;
+  await _supa.from('feed_posts').delete().eq('id',postId).eq('user_id',currentUser.id);
+  allPosts = allPosts.filter(function(p){ return p.id !== postId; });
+  var el = document.getElementById('post-'+postId);
+  if (el) el.remove();
+  document.getElementById('post-count').textContent = allPosts.length;
+}
+
+// ── STATS + TRENDING ──
+async function loadStats() {
+  var r = await _supa.from('profiles').select('*',{count:'exact',head:true});
+  document.getElementById('member-count').textContent = r.count || 1;
+
+  var tp = await _supa.from('feed_posts').select('ticker').not('ticker','is',null);
+  if (tp.data && tp.data.length) {
+    var counts = {};
+    tp.data.forEach(function(p){ if(p.ticker) counts[p.ticker] = (counts[p.ticker]||0)+1; });
+    var sorted = Object.keys(counts).sort(function(a,b){ return counts[b]-counts[a]; }).slice(0,6);
+    var el = document.getElementById('trending-tickers');
+    if (sorted.length) {
+      el.innerHTML = sorted.map(function(sym){
+        var c = counts[sym];
+        return '<div class="trending-item" onclick="filterByTicker(\''+sym+'\')">'+
+          '<div><div class="trending-sym">'+sym+'</div><div class="trending-co">'+c+' '+(c===1?'post':'posts')+'</div></div>'+
+          '<span class="trending-count">'+c+'</span></div>';
+      }).join('');
+    } else {
+      el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0">Post ideas with tickers to see trending stocks</div>';
+    }
+  } else {
+    document.getElementById('trending-tickers').innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0">Post ideas with tickers to see trending stocks</div>';
+  }
+}
+
+// ── HELPERS ──
+function getTimeAgo(ts) {
+  var s = Math.floor((Date.now()-new Date(ts))/1000);
+  if(s<60) return 'just now'; if(s<3600) return Math.floor(s/60)+'m ago';
+  if(s<86400) return Math.floor(s/3600)+'h ago'; return Math.floor(s/86400)+'d ago';
+}
+function escapeHtml(t) {
+  if (!t) return '';
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+async function doSignOut() { await _supa.auth.signOut(); window.location.href='login.html'; }
 
 init();
 </script>
