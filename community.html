@@ -459,7 +459,7 @@ function renderPost(p) {
   return '<div class="post-card" id="post-'+p.id+'">' +
     '<div class="post-header"><div class="post-user">' +
       '<div class="post-avatar">'+initials+'</div>' +
-      '<div><div class="post-name '<div><div class="post-name"><a href="profile.html?u='+username+'" style="color:inherit;text-decoration:none" onmouseover="this.style.color=\'var(--accent2)\'" onmouseout="this.style.color=\'inherit\'">@'+username+'</a></div><div class="post-time">'+timeAgo+'</div><'</div></div>' +
+      '<div><div class="post-name"><a href="profile.html?u='+username+'" style="color:inherit;text-decoration:none" onmouseover="this.style.color=\'var(--accent2)\'" onmouseout="this.style.color=\'inherit\'">@'+username+'</a></div><div class="post-time">'+timeAgo+'</div></div>' +
     '</div></div>' +
     '<div class="post-badges">'+tickerBadge+dirBadge+convBadge+'</div>' +
     '<div class="post-content">'+escapeHtml(p.content)+'</div>' +
