@@ -5,250 +5,134 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stockhut — Create Account</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a26;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.18);--text:#e8e8f0;--muted:#6e6e8a;--accent:#7c6fff;--accent2:#4ecdc4;--green:#2ecc8a;--red:#ff5f6d}
+:root{--bg:#09090f;--bg2:#111118;--bg3:#18181f;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);--text:#eeeef2;--muted:#5f5f78;--soft:#9898b0;--purple:#7c6fff;--teal:#4ecdc4;--green:#2ecc8a;--red:#ff5263}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Syne',sans-serif}
-body{display:flex;flex-direction:column;min-height:100vh;background-image:radial-gradient(ellipse at 50% 0%,rgba(78,205,196,0.12) 0%,transparent 60%)}
-.topbar{padding:16px 32px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
-.brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text)}
-.brand-icon{width:30px;height:30px;background:linear-gradient(135deg,#7c6fff,#4ecdc4);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px}
-.brand-name{font-size:16px;font-weight:800;letter-spacing:-0.5px}
-.brand-tld{color:var(--accent2)}
-.topbar-right{font-size:12px;color:var(--muted)}
-.topbar-right a{color:var(--accent);text-decoration:none;font-weight:600}
+body{display:flex;flex-direction:column;min-height:100vh;background-image:radial-gradient(ellipse at 50% 0%,rgba(78,205,196,0.07) 0%,transparent 60%)}
+.topnav{padding:16px 28px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+.logo-mark{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--text)}
+.logo-name{font-size:15px;font-weight:800;letter-spacing:-.4px}
+.logo-tld{color:var(--teal)}
+.topnav-right{font-size:12px;color:var(--muted)}
+.topnav-right a{color:var(--purple);text-decoration:none;font-weight:600}
 .main{flex:1;display:flex;align-items:center;justify-content:center;padding:32px 20px}
 .card{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:32px 36px;width:100%;max-width:440px;box-shadow:0 24px 60px rgba(0,0,0,0.5)}
-.card-title{font-size:22px;font-weight:800;letter-spacing:-0.8px;margin-bottom:6px}
-.card-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5}
-.perks{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
-.perk{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--muted)}
-.perk-icon{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.card-title{font-size:22px;font-weight:800;letter-spacing:-.8px;margin-bottom:6px}
+.card-sub{font-size:13px;color:var(--soft);margin-bottom:20px;line-height:1.6}
+.perks{display:flex;flex-direction:column;gap:6px;margin-bottom:20px;padding:12px 14px;background:var(--bg3);border-radius:9px;border:1px solid var(--border)}
+.perk{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--soft)}
+.perk-dot{width:4px;height:4px;border-radius:50%;background:var(--teal);flex-shrink:0}
 .field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
-.field label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;font-weight:600}
-.field input{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:11px 14px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:border-color .15s;width:100%}
-.field input:focus{border-color:var(--accent2)}
+.field label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;font-weight:600}
+.field input{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 13px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:border-color .15s;width:100%}
+.field input:focus{border-color:var(--teal)}
 .field input::placeholder{color:var(--muted)}
+.invite-field input{border-color:rgba(78,205,196,0.3);background:rgba(78,205,196,0.04)}
+.invite-field input:focus{border-color:var(--teal)}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.invite-field input{border-color:rgba(78,205,196,0.4);background:rgba(78,205,196,0.05)}
-.invite-field input:focus{border-color:var(--accent2)}
 .terms{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:16px;padding:10px 12px;background:var(--bg3);border-radius:7px;border:1px solid var(--border)}
-.terms a{color:var(--accent);text-decoration:none}
-.btn-primary{width:100%;padding:13px;background:var(--accent2);color:#0a0a0f;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s}
+.terms a{color:var(--purple);text-decoration:none}
+.btn-primary{width:100%;padding:12px;background:var(--teal);color:#09090f;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s}
 .btn-primary:hover{background:#3db8b0;transform:translateY(-1px)}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
 .signin-link{text-align:center;margin-top:18px;font-size:13px;color:var(--muted)}
-.signin-link a{color:var(--accent);text-decoration:none;font-weight:600}
-.error-msg{background:rgba(255,95,109,0.1);border:1px solid rgba(255,95,109,0.3);border-radius:7px;padding:10px 12px;font-size:12px;color:#ff8f9a;margin-bottom:12px;display:none}
+.signin-link a{color:var(--purple);text-decoration:none;font-weight:600}
+.error-msg{background:rgba(255,82,99,0.08);border:1px solid rgba(255,82,99,0.2);border-radius:7px;padding:9px 12px;font-size:12px;color:#ff8f9a;display:none;margin-bottom:12px}
 .error-msg.show{display:block}
-.success-msg{background:rgba(46,204,138,0.1);border:1px solid rgba(46,204,138,0.3);border-radius:7px;padding:12px 14px;font-size:13px;color:var(--green);margin-bottom:14px;line-height:1.6;display:none}
+.success-msg{background:rgba(46,204,138,0.08);border:1px solid rgba(46,204,138,0.2);border-radius:8px;padding:11px 14px;font-size:13px;color:var(--green);display:none;margin-bottom:14px;line-height:1.6}
 .success-msg.show{display:block}
-.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,0.2);border-top-color:#0a0a0f;border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle}
+.spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(0,0,0,0.15);border-top-color:#09090f;border-radius:50%;animation:spin .7s linear infinite;margin-right:5px;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
-.footer{padding:16px 32px;border-top:1px solid var(--border);text-align:center;font-size:11px;color:var(--muted)}
+.footer-bar{padding:14px;border-top:1px solid var(--border);text-align:center;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
 </style>
 </head>
 <body>
-
-<div class="topbar">
-  <a class="brand" href="index.html">
-    <div class="brand-icon">🏚</div>
-    <div class="brand-name">Stockhut<span class="brand-tld">.io</span></div>
+<div class="topnav">
+  <a class="logo-mark" href="index.html">
+    <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+      <rect x="6" y="16" width="20" height="14" rx="2" fill="#1e1e35" stroke="#7c6fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="4,18 16,5 28,18" fill="none" stroke="#7c6fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="12" y="22" width="8" height="8" rx="1" fill="#09090f" stroke="#7c6fff" stroke-width="1.2"/>
+      <polyline points="4,24 9,19 14,21 20,15 27,10" fill="none" stroke="#4ecdc4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="20" cy="15" r="1.8" fill="#4ecdc4"/>
+      <circle cx="27" cy="10" r="2.2" fill="#4ecdc4"/>
+    </svg>
+    <span class="logo-name">Stockhut<span class="logo-tld">.co</span></span>
   </a>
-  <div class="topbar-right">Already a member? <a href="login.html">Sign in</a></div>
+  <div class="topnav-right">Already a member? <a href="login.html">Sign in</a></div>
 </div>
-
 <div class="main">
   <div class="card">
     <div class="card-title">Join Stockhut</div>
     <div class="card-sub">Create your free account and start sharing investment ideas with your network.</div>
-
     <div class="perks">
-      <div class="perk"><div class="perk-icon" style="background:rgba(124,111,255,0.15)">📊</div>Private portfolio dashboard</div>
-      <div class="perk"><div class="perk-icon" style="background:rgba(78,205,196,0.15)">📋</div>Watchlist with position tracking</div>
-      <div class="perk"><div class="perk-icon" style="background:rgba(46,204,138,0.15)">💡</div>Research feed — share ideas from X and WhatsApp</div>
-      <div class="perk"><div class="perk-icon" style="background:rgba(249,168,37,0.15)">👥</div>Connect with like-minded retail investors</div>
+      <div class="perk"><div class="perk-dot"></div>Private portfolio dashboard</div>
+      <div class="perk"><div class="perk-dot"></div>Watchlist with position tracking</div>
+      <div class="perk"><div class="perk-dot"></div>Research feed — share ideas from X and WhatsApp</div>
+      <div class="perk"><div class="perk-dot"></div>Connect with like-minded retail investors</div>
     </div>
-
     <div class="error-msg" id="error-msg"></div>
     <div class="success-msg" id="success-msg"></div>
-
     <div class="field invite-field">
       <label>Invite Code <span style="color:var(--red)">*</span></label>
-      <input type="text" id="invite-code" placeholder="e.g. BRENDON1" maxlength="20"
-        style="font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:2px"
-        oninput="this.value=this.value.toUpperCase()">
+      <input type="text" id="invite-code" placeholder="e.g. BRENDON1" maxlength="20" style="letter-spacing:2px;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
     </div>
-
     <div class="field-row">
-      <div class="field">
-        <label>First Name</label>
-        <input type="text" id="first-name" placeholder="Brendon" autocomplete="given-name">
-      </div>
-      <div class="field">
-        <label>Last Name</label>
-        <input type="text" id="last-name" placeholder="K" autocomplete="family-name">
-      </div>
+      <div class="field"><label>First Name</label><input type="text" id="first-name" placeholder="Brendon" autocomplete="given-name"></div>
+      <div class="field"><label>Last Name</label><input type="text" id="last-name" placeholder="K" autocomplete="family-name"></div>
     </div>
-
-    <div class="field">
-      <label>Username</label>
-      <input type="text" id="username" placeholder="brendon_trades" autocomplete="username"
-        oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')">
-    </div>
-
-    <div class="field">
-      <label>Email Address</label>
-      <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
-    </div>
-
-    <div class="field">
-      <label>Password</label>
-      <input type="password" id="password" placeholder="Min. 8 characters" autocomplete="new-password">
-    </div>
-
-    <div class="field" style="margin-bottom:16px">
-      <label>Confirm Password</label>
-      <input type="password" id="confirm-password" placeholder="Repeat password" autocomplete="new-password">
-    </div>
-
-    <div class="terms">
-      By creating an account you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>. Your portfolio data is private by default — you control what you share.
-    </div>
-
+    <div class="field"><label>Username</label><input type="text" id="username" placeholder="brendon_trades" autocomplete="username" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')"></div>
+    <div class="field"><label>Email Address</label><input type="email" id="email" placeholder="you@example.com" autocomplete="email"></div>
+    <div class="field"><label>Password</label><input type="password" id="password" placeholder="Min. 8 characters" autocomplete="new-password"></div>
+    <div class="field" style="margin-bottom:16px"><label>Confirm Password</label><input type="password" id="confirm-password" placeholder="Repeat password" autocomplete="new-password"></div>
+    <div class="terms">By creating an account you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>. Your portfolio data is private by default.</div>
     <button class="btn-primary" id="signup-btn" onclick="doSignUp()">Create Free Account</button>
     <div class="signin-link">Already have an account? <a href="login.html">Sign in</a></div>
   </div>
 </div>
-
-<div class="footer">Not financial advice &nbsp;·&nbsp; &copy; 2026 Stockhut</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<div class="footer-bar">Not financial advice &nbsp;&middot;&nbsp; &copy; 2026 Stockhut</div>
 <script>
-// Single Supabase init
 var _supa = window.supabase.createClient(
   'https://wmuywxaglwcfqceppxll.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndtdXl3eGFnbHdjZnFjZXBweGxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NzM3NTcsImV4cCI6MjA5NDE0OTc1N30.HXNXSEMO6pfODeIqPIVQ1AHNRiK7KsVnSH7TKS_Q3Y0'
 );
-
-// Pre-fill invite code from URL param
-(function(){
-  var code = new URLSearchParams(window.location.search).get('code');
-  if(code) document.getElementById('invite-code').value = code.toUpperCase();
-})();
-
-// Redirect if already logged in
-_supa.auth.getSession().then(function(r){
-  if(r.data && r.data.session) window.location.href = 'community.html';
-});
-
-function showError(msg){
-  var el = document.getElementById('error-msg');
-  el.textContent = msg; el.classList.add('show');
-  document.getElementById('success-msg').classList.remove('show');
-  window.scrollTo(0,0);
-}
-function showSuccess(msg){
-  var el = document.getElementById('success-msg');
-  el.innerHTML = msg; el.classList.add('show');
-  document.getElementById('error-msg').classList.remove('show');
-}
-function setLoading(on){
-  var btn = document.getElementById('signup-btn');
-  btn.disabled = on;
-  btn.innerHTML = on ? '<span class="spinner"></span>Creating account...' : 'Create Free Account';
-}
-
+_supa.auth.getSession().then(function(r){ if(r.data&&r.data.session) window.location.href='community.html'; });
+(function(){ var code=new URLSearchParams(window.location.search).get('code'); if(code) document.getElementById('invite-code').value=code.toUpperCase(); })();
+function showError(msg){var el=document.getElementById('error-msg');el.textContent=msg;el.classList.add('show');document.getElementById('success-msg').classList.remove('show');window.scrollTo(0,0);}
+function showSuccess(msg){var el=document.getElementById('success-msg');el.innerHTML=msg;el.classList.add('show');document.getElementById('error-msg').classList.remove('show');}
+function setLoading(on){var btn=document.getElementById('signup-btn');btn.disabled=on;btn.innerHTML=on?'<span class="spinner"></span>Creating account...':'Create Free Account';}
 async function doSignUp(){
-  var inviteCode    = document.getElementById('invite-code').value.trim().toUpperCase();
-  var firstName     = document.getElementById('first-name').value.trim();
-  var lastName      = document.getElementById('last-name').value.trim();
-  var username      = document.getElementById('username').value.trim();
-  var email         = document.getElementById('email').value.trim();
-  var password      = document.getElementById('password').value;
-  var confirmPass   = document.getElementById('confirm-password').value;
-
-  // Validation
-  if(!inviteCode)    { showError('Please enter your invite code.'); return; }
-  if(!firstName)     { showError('Please enter your first name.'); return; }
-  if(!username)      { showError('Please choose a username.'); return; }
-  if(username.length < 3) { showError('Username must be at least 3 characters.'); return; }
-  if(!email || !email.includes('@')) { showError('Please enter a valid email address.'); return; }
-  if(password.length < 8) { showError('Password must be at least 8 characters.'); return; }
-  if(password !== confirmPass) { showError('Passwords do not match.'); return; }
-
+  var inviteCode=document.getElementById('invite-code').value.trim().toUpperCase();
+  var firstName=document.getElementById('first-name').value.trim();
+  var lastName=document.getElementById('last-name').value.trim();
+  var username=document.getElementById('username').value.trim();
+  var email=document.getElementById('email').value.trim();
+  var password=document.getElementById('password').value;
+  var confirm=document.getElementById('confirm-password').value;
+  if(!inviteCode){showError('Please enter your invite code.');return;}
+  if(!firstName){showError('Please enter your first name.');return;}
+  if(!username||username.length<3){showError('Username must be at least 3 characters.');return;}
+  if(!email||!email.includes('@')){showError('Please enter a valid email address.');return;}
+  if(password.length<8){showError('Password must be at least 8 characters.');return;}
+  if(password!==confirm){showError('Passwords do not match.');return;}
   setLoading(true);
-
-  // Step 1 — validate invite code
-  var inviteResult = await _supa
-    .from('invites')
-    .select('id, code, expires_at, used_at')
-    .eq('code', inviteCode)
-    .maybeSingle();
-
-  if(inviteResult.error){
-    setLoading(false);
-    showError('Could not verify invite code. Please try again.');
-    console.error('Invite check error:', inviteResult.error);
-    return;
-  }
-
-  if(!inviteResult.data){
-    setLoading(false);
-    showError('Invite code not found. Please check the code and try again.');
-    return;
-  }
-
-  if(inviteResult.data.used_at){
-    setLoading(false);
-    showError('This invite code has already been used.');
-    return;
-  }
-
-  if(new Date(inviteResult.data.expires_at) < new Date()){
-    setLoading(false);
-    showError('This invite code has expired. Please contact Brendon for a new one.');
-    return;
-  }
-
-  var inviteId = inviteResult.data.id;
-
-  // Step 2 — create auth account
-  var signupResult = await _supa.auth.signUp({
-    email: email,
-    password: password,
-    options: {
-      data: { full_name: firstName + ' ' + lastName, username: username },
-      emailRedirectTo: 'https://stockhut.co/login.html'
-    }
-  });
-
-  if(signupResult.error){
-    setLoading(false);
-    showError(signupResult.error.message);
-    return;
-  }
-
-  var user = signupResult.data.user;
-
-  // Step 3 — create profile
+  var invR=await _supa.from('invites').select('id,expires_at,used_at').eq('code',inviteCode).maybeSingle();
+  if(invR.error||!invR.data){setLoading(false);showError('Invalid invite code. Please check and try again.');return;}
+  if(invR.data.used_at){setLoading(false);showError('This invite code has already been used.');return;}
+  if(new Date(invR.data.expires_at)<new Date()){setLoading(false);showError('This invite code has expired. Please contact Brendon for a new one.');return;}
+  var inviteId=invR.data.id;
+  var signR=await _supa.auth.signUp({email:email,password:password,options:{data:{full_name:firstName+' '+lastName,username:username},emailRedirectTo:'https://stockhut.co/login.html'}});
+  if(signR.error){setLoading(false);showError(signR.error.message);return;}
+  var user=signR.data.user;
   if(user){
-    await _supa.from('profiles').upsert({
-      id: user.id,
-      username: username,
-      full_name: firstName + ' ' + lastName,
-      is_public: false
-    });
-
-    // Step 4 — mark invite as used
-    await _supa.from('invites')
-      .update({ used_at: new Date().toISOString(), used_by: user.id })
-      .eq('id', inviteId);
+    await _supa.from('profiles').upsert({id:user.id,username:username,full_name:firstName+' '+lastName,is_public:false});
+    await _supa.from('invites').update({used_at:new Date().toISOString(),used_by:user.id}).eq('id',inviteId);
   }
-
   setLoading(false);
-  showSuccess('✅ Account created! Check your email for a confirmation link. Once confirmed, <a href="login.html" style="color:var(--accent2);font-weight:600">sign in here</a>.');
-  document.getElementById('signup-btn').style.display = 'none';
+  showSuccess('Account created! Check your email for a confirmation link. Once confirmed, <a href="login.html" style="color:var(--teal);font-weight:600">sign in here</a>.');
+  document.getElementById('signup-btn').style.display='none';
 }
 </script>
 </body>
