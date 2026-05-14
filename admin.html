@@ -282,7 +282,14 @@ async function sendEmailInvite(){
   btn.disabled=false;btn.innerHTML='Send Email Invite →';
   if(error){showMsg('invite-error','Failed to create invite. Try again.');return;}
   // Show the link for manual sending (email service would be added via Supabase Edge Functions later)
-  showMsg('invite-success',`✅ Invite created for ${email}!\n\nShare this link manually:\n${inviteLink}\n\n(Full email automation coming soon — for now copy and paste this link)`);
+  // Build email copy
+var emailSubject = 'You\'re invited to join Stockhut';
+var emailBody = 'Hi ' + (name || 'there') + ',\n\n' +
+  'I\'d like to invite you to Stockhut — a private community for serious retail investors where we share stock ideas, research and watchlists.\n\n' +
+  'Your personal invite link (expires in 7 days):\n' + inviteLink + '\n\n' +
+  'See you inside,\nBrendon\n\nstockhut.co';
+var mailtoLink = 'mailto:' + email + '?subject=' + encodeURIComponent(emailSubject) + '&body=' + encodeURIComponent(emailBody);
+showMsg('invite-success','✅ Invite created! <a href="' + mailtoLink + '" style="color:var(--accent2);font-weight:600">Click here to open in your email app</a> — or copy this link manually:<br><br><span style="font-family:DM Mono,monospace;font-size:11px;word-break:break-all;color:var(--muted)">' + inviteLink + '</span>');
   document.getElementById('invite-email').value='';
   document.getElementById('invite-name').value='';
   loadInvites();loadStats();
@@ -295,7 +302,11 @@ async function generateWALink(){
   const expires=new Date(Date.now()+7*24*60*60*1000).toISOString();
   const {data:{session}}=await _supa.auth.getSession();
   await _supa.from('invites').insert({code,created_by:session.user.id,expires_at:expires});
-  const msg=`Hey${name?' '+name:''}! 👋\n\nI'd like to invite you to Stockhut — a private community for retail investors where we share ideas, watchlists and research.\n\nYour personal invite link (expires in 7 days):\n${inviteLink}\n\nSee you inside 🏚`;
+  const msg='Hey'+(name?' '+name:'')+', 👋\n\n' +
+  'I\'d like to invite you to Stockhut — a private community for serious retail investors where we share stock ideas, research and watchlists.\n\n' +
+  '🔐 It\'s invite-only, so this link is just for you.\n\n' +
+  'Your personal invite link (expires in 7 days):\n' + inviteLink + '\n\n' +
+  'Just click the link, create your account, and you\'re in. See you inside 🏚\n\nstockhut.co';
   lastWALink=msg;
   document.getElementById('wa-link-text').textContent=msg;
   document.getElementById('wa-box').classList.add('show');
