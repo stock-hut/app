@@ -547,56 +547,19 @@ function renderSourceCard(url) {
 
 // ── LOAD TWEET CONTENT VIA OEMBED ──
 async function loadTweetContent(cardId, url, handle, tweetId) {
+  // Twitter oEmbed is blocked by CORS - show clean static card
   var card = document.getElementById(cardId);
   if (!card) return;
-
-  // Try multiple proxies in order
-  var proxies = [
-    'https://api.allorigins.win/get?url=',
-    'https://corsproxy.io/?',
-    'https://api.codetabs.com/v1/proxy?quest='
-  ];
-  var oembedUrl = 'https://publish.twitter.com/oembed?url='+encodeURIComponent(url)+'&omit_script=true&dnt=true';
-
-  for (var i = 0; i < proxies.length; i++) {
-    try {
-      var resp = await fetch(proxies[i] + encodeURIComponent(oembedUrl), {signal: AbortSignal.timeout(6000)});
-      if (!resp.ok) continue;
-      var json = await resp.json();
-      // allorigins wraps in .contents, others return directly
-      var raw = json.contents || json.body || JSON.stringify(json);
-      var data = typeof raw === 'string' ? JSON.parse(raw) : raw;
-      if (!data || !data.html) continue;
-
-      // Extract text from oEmbed HTML
-      var tmp = document.createElement('div');
-      tmp.innerHTML = data.html;
-      var paragraphs = tmp.querySelectorAll('p');
-      var tweetText = '';
-      if (paragraphs.length > 0) {
-        tweetText = paragraphs[0].textContent.trim();
-        tweetText = tweetText.replace(/— @\S+.*$/,'').trim();
-      }
-      var authorName = data.author_name || ('@'+handle);
-
-      var loadingEl = card.querySelector('.tweet-card-loading');
-      if (loadingEl) {
-        loadingEl.outerHTML = tweetText
-          ? '<div class="tweet-card-text">'+escapeHtml(tweetText)+'</div>'
-          : '<div class="tweet-card-text" style="color:var(--muted)">View tweet by @'+handle+'</div>';
-      }
-      var nameEl = card.querySelector('.tweet-card-name');
-      if (nameEl) nameEl.textContent = authorName;
-      return; // success — stop trying proxies
-    } catch(e) { continue; }
-  }
-
-  // All proxies failed — show clean fallback
-  var loadingEl = card ? card.querySelector('.tweet-card-loading') : null;
+  var loadingEl = card.querySelector('.tweet-card-loading');
   if (loadingEl) {
-    loadingEl.outerHTML = '<div class="tweet-card-text" style="color:var(--muted);font-style:italic">@'+handle+' on X — click to view tweet</div>';
+    loadingEl.outerHTML =
+      '<div class="tweet-card-text" style="color:var(--muted);font-style:italic">' +
+      'Tap to view @'+handle+''s tweet on X' +
+      '</div>';
   }
 }
+
+// ── URL PREVIEW IN COMPOSER
 
 // ── URL PREVIEW IN COMPOSER ──
 function onUrlInput(val) {
@@ -615,35 +578,15 @@ async function showComposerPreview(url) {
     var handle = extractHandle(url) || 'twitter';
     var tweetId = extractTweetId(url);
     var initials = handle.slice(0,2).toUpperCase();
-    try {
-      var oembedUrl = 'https://publish.twitter.com/oembed?url='+encodeURIComponent(url)+'&omit_script=true&dnt=true';
-      var resp = await fetch(PROXY + encodeURIComponent(oembedUrl), {signal: AbortSignal.timeout(6000)});
-      if (!resp.ok) throw new Error('fetch failed');
-      var json = await resp.json();
-      var raw = json.contents || json.body || JSON.stringify(json);
-      var data = typeof raw === 'string' ? JSON.parse(raw) : raw;
-      var tmp = document.createElement('div');
-      tmp.innerHTML = data.html || '';
-      var paragraphs = tmp.querySelectorAll('p');
-      var tweetText = paragraphs.length ? paragraphs[0].textContent.replace(/— @\S+.*$/,'').trim() : '';
-      var authorName = data.author_name || ('@'+handle);
-      box.innerHTML =
-        '<div class="tweet-card-header" style="margin-bottom:8px">' +
-          '<div class="tweet-card-avatar">'+initials+'</div>' +
-          '<div><div class="tweet-card-name">'+escapeHtml(authorName)+'</div><div class="tweet-card-handle">@'+handle+' on X</div></div>' +
-          '<div class="tweet-card-x">𝕏</div>' +
-        '</div>' +
-        (tweetText ? '<div style="font-size:12px;line-height:1.6;color:var(--text);margin-bottom:6px">'+escapeHtml(tweetText)+'</div>' : '') +
-        '<div style="font-size:10px;color:var(--muted)">'+url.slice(0,60)+'</div>';
-    } catch(e) {
-      box.innerHTML =
-        '<div class="tweet-card-header">' +
-          '<div class="tweet-card-avatar">'+initials+'</div>' +
-          '<div><div class="tweet-card-name">@'+handle+'</div><div class="tweet-card-handle">on X / Twitter</div></div>' +
-          '<div class="tweet-card-x">𝕏</div>' +
-        '</div>' +
-        '<div style="font-size:12px;color:var(--muted)">Tweet preview unavailable — will still save the link</div>';
-    }
+    // Twitter blocks oEmbed via CORS - show static preview
+    box.innerHTML =
+      '<div class="tweet-card-header" style="margin-bottom:6px">' +
+        '<div class="tweet-card-avatar">'+initials+'</div>' +
+        '<div><div class="tweet-card-name">@'+handle+'</div><div class="tweet-card-handle">on X / Twitter</div></div>' +
+        '<div class="tweet-card-x">𝕏</div>' +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--muted);font-style:italic">Tweet link saved — tap card to view on X</div>' +
+      '<div style="font-size:10px;color:var(--muted);margin-top:4px">'+url.slice(0,60)+(url.length>60?'...':'')+'</div>';
   } else {
     var domain = getDomain(url);
     var icon = getLinkIcon(url);
