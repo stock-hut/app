@@ -280,7 +280,6 @@ var _supa = window.supabase.createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndtdXl3eGFnbHdjZnFjZXBweGxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NzM3NTcsImV4cCI6MjA5NDE0OTc1N30.HXNXSEMO6pfODeIqPIVQ1AHNRiK7KsVnSH7TKS_Q3Y0'
 );
 var OWNER_EMAIL = 'brendon.knoetze@gmail.com';
-var PROXY = 'https://api.allorigins.win/get?url=';
 var currentUser = null;
 var priceCache = {};
 var lastRefresh = null;
@@ -385,67 +384,25 @@ async function refreshPrices() {
   setRefreshStatus('loading');
 
   var symbols = screenerTickers.map(function(t){ return t.symbol; });
-  // Also add watchlist symbols
   watchlistItems.forEach(function(w){ if(!symbols.includes(w.ticker)) symbols.push(w.ticker); });
-
   if (!symbols.length) { btn.classList.remove('spinning'); return; }
 
-  // Batch Yahoo Finance call
-  var yql = 'https://query1.finance.yahoo.com/v8/finance/spark?symbols='+symbols.join(',')+'&range=1y&interval=1d';
-  var quoteUrl = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols='+symbols.join(',')+'&fields=regularMarketPrice,regularMarketChangePercent,regularMarketVolume,trailingPE,fiftyTwoWeekHigh,fiftyTwoWeekLow,shortName,regularMarketChange,fiftyDayAverage,twoHundredDayAverage';
-
   try {
-    var resp = await fetch(PROXY + encodeURIComponent(quoteUrl), {signal:AbortSignal.timeout(12000)});
-    if (!resp.ok) throw new Error('fetch failed');
-    var json = await resp.json();
-    var data = JSON.parse(json.contents);
-    var quotes = data.quoteResponse && data.quoteResponse.result ? data.quoteResponse.result : [];
-    quotes.forEach(function(q) {
-      priceCache[q.symbol] = {
-        price: q.regularMarketPrice,
-        change: q.regularMarketChangePercent,
-        changeAmt: q.regularMarketChange,
-        volume: q.regularMarketVolume,
-        pe: q.trailingPE,
-        high52: q.fiftyTwoWeekHigh,
-        low52: q.fiftyTwoWeekLow,
-        name: q.shortName || q.symbol,
-        ma50: q.fiftyDayAverage,
-        ma200: q.twoHundredDayAverage,
-      };
+    // Use our Vercel serverless proxy — no CORS issues, reliable
+    var resp = await fetch('/api/prices?symbols='+symbols.join(','), {signal:AbortSignal.timeout(15000)});
+    if (!resp.ok) throw new Error('API error '+resp.status);
+    var result = await resp.json();
+    if (!result.ok) throw new Error(result.error || 'API failed');
+    // Merge into priceCache
+    Object.keys(result.data).forEach(function(sym){
+      priceCache[sym] = result.data[sym];
     });
     lastRefresh = new Date();
     setRefreshStatus('ok');
   } catch(e) {
+    console.warn('Price fetch failed:', e.message);
     setRefreshStatus('error');
   }
-
-  // Fetch 1W and 1M changes separately
-  try {
-    var sparkUrl = 'https://query1.finance.yahoo.com/v8/finance/spark?symbols='+symbols.join(',')+'&range=1mo&interval=1d';
-    var sr = await fetch(PROXY + encodeURIComponent(sparkUrl), {signal:AbortSignal.timeout(10000)});
-    if (sr.ok) {
-      var sj = await sr.json();
-      var sd = JSON.parse(sj.contents);
-      var sparks = sd.spark && sd.spark.result ? sd.spark.result : [];
-      sparks.forEach(function(s) {
-        if (!s.response || !s.response[0]) return;
-        var closes = s.response[0].indicators && s.response[0].indicators.quote && s.response[0].indicators.quote[0] ? s.response[0].indicators.quote[0].close : [];
-        var validCloses = closes.filter(function(c){ return c !== null; });
-        if (validCloses.length >= 5) {
-          var now = validCloses[validCloses.length-1];
-          var w1ago = validCloses[Math.max(0,validCloses.length-6)];
-          var m1ago = validCloses[0];
-          if (priceCache[s.symbol]) {
-            priceCache[s.symbol].change1w = w1ago ? ((now-w1ago)/w1ago*100) : null;
-            priceCache[s.symbol].change1m = m1ago ? ((now-m1ago)/m1ago*100) : null;
-            priceCache[s.symbol].sparkData = validCloses;
-            priceCache[s.symbol].rsi = calcRSI(validCloses, 14);
-          }
-        }
-      });
-    }
-  } catch(e) {}
 
   btn.classList.remove('spinning');
   renderScreener();
