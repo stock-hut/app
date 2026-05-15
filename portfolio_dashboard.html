@@ -97,6 +97,23 @@ tr:hover td{background:rgba(255,255,255,0.015)}
 /* SPINNER */
 .mini-spin{display:inline-block;width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--teal);border-radius:50%;animation:spin .8s linear infinite}
 
+/* WEEKLY TABLE */
+.weekly-table{width:100%;border-collapse:collapse;font-size:12px}
+.weekly-table th{padding:8px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-family:'DM Mono',monospace;background:var(--bg3);border-bottom:1px solid var(--border2);white-space:nowrap}
+.weekly-table td{padding:9px 10px;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:12px;white-space:nowrap}
+.weekly-table tr:last-child td{border-bottom:none}
+.weekly-table tr:hover td{background:rgba(255,255,255,0.02)}
+.week-num{color:var(--muted);font-size:11px}
+.day-val{color:var(--soft)}
+.day-val.today{color:var(--text);font-weight:700}
+.day-val.empty{color:var(--muted);opacity:.4}
+.week-gain.pos{color:var(--green)}
+.week-gain.neg{color:var(--red)}
+.week-gain.neu{color:var(--muted)}
+.baseline-gain.pos{color:var(--green)}
+.baseline-gain.neg{color:var(--red)}
+.current-week td{background:rgba(124,111,255,0.04)}
+
 /* BOTTOM NAV */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:rgba(9,9,15,0.97);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:none;align-items:center;justify-content:space-around;z-index:100}
 .bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
@@ -204,6 +221,7 @@ tr:hover td{background:rgba(255,255,255,0.015)}
   <div class="tab-bar">
     <button class="tab active" id="tab-holdings" onclick="switchTab('holdings')">Holdings</button>
     <button class="tab" id="tab-trades" onclick="switchTab('trades')">Trade History</button>
+    <button class="tab" id="tab-weekly" onclick="switchTab('weekly')">📅 Weekly Tracker</button>
   </div>
 
   <!-- HOLDINGS -->
@@ -244,6 +262,32 @@ tr:hover td{background:rgba(255,255,255,0.015)}
           <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted)">Loading trades...</td></tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- WEEKLY TRACKER -->
+  <div id="view-weekly" style="display:none">
+    <div class="section-header">
+      <div class="section-title">Weekly Tracker</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--soft)">
+          <span>Cash balance:</span>
+          <input id="cash-input" type="number" placeholder="0"
+            style="width:90px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none"
+            onfocus="this.style.borderColor='var(--teal)'"
+            onblur="this.style.borderColor='var(--border2)'">
+          <button onclick="updateCash()" style="padding:5px 10px;background:var(--teal);color:#09090f;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif">Save</button>
+        </div>
+        <button onclick="takeManualSnapshot()" style="padding:6px 14px;background:var(--purple);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;display:flex;align-items:center;gap:5px">
+          📸 Snapshot Now
+        </button>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:12px">
+      Baseline: £49,423 &nbsp;·&nbsp; Auto-snapshot runs Mon–Fri at 21:10 UK time
+    </div>
+    <div id="weekly-content">
+      <div style="text-align:center;padding:32px;color:var(--muted);font-size:13px">Loading weekly data...</div>
     </div>
   </div>
 
@@ -680,8 +724,156 @@ function setRange(range) {
 function switchTab(tab) {
   document.getElementById('view-holdings').style.display = tab==='holdings'?'block':'none';
   document.getElementById('view-trades').style.display = tab==='trades'?'block':'none';
+  document.getElementById('view-weekly').style.display = tab==='weekly'?'block':'none';
   document.getElementById('tab-holdings').classList.toggle('active',tab==='holdings');
   document.getElementById('tab-trades').classList.toggle('active',tab==='trades');
+  document.getElementById('tab-weekly').classList.toggle('active',tab==='weekly');
+  if (tab==='weekly') loadWeeklyData();
+}
+
+var BASELINE = 49423;
+
+async function loadWeeklyData() {
+  var r = await _supa.from('portfolio_snapshots')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('snapshot_date', {ascending:false})
+    .limit(100);
+
+  var snapshots = r.data || [];
+
+  // Set cash input from latest snapshot
+  if (snapshots.length) {
+    var cashEl = document.getElementById('cash-input');
+    if (cashEl) cashEl.value = snapshots[0].cash_balance || 0;
+  }
+
+  if (!snapshots.length) {
+    document.getElementById('weekly-content').innerHTML =
+      '<div style="text-align:center;padding:40px;color:var(--muted)">' +
+      '<div style="font-size:32px;margin-bottom:12px">📅</div>' +
+      '<div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">No snapshots yet</div>' +
+      '<div style="font-size:13px">The first snapshot will be taken automatically tonight at 21:10 UK time.<br>' +
+      'Or click <strong>Snapshot Now</strong> to capture today's value immediately.</div>' +
+      '</div>';
+    return;
+  }
+
+  // Group snapshots by week number
+  var weeks = {};
+  snapshots.forEach(function(s) {
+    var wk = s.week_number || 0;
+    if (!weeks[wk]) weeks[wk] = {
+      week: wk, mon:null, tue:null, wed:null, thu:null, fri:null,
+      dates: {}, snapshots: []
+    };
+    var day = (s.day_of_week||'').toLowerCase().slice(0,3);
+    if (['mon','tue','wed','thu','fri'].includes(day)) {
+      weeks[wk][day] = s.total_value;
+      weeks[wk].dates[day] = s.snapshot_date;
+    }
+    weeks[wk].snapshots.push(s);
+  });
+
+  // Sort weeks descending
+  var sortedWeeks = Object.values(weeks).sort(function(a,b){ return b.week-a.week; });
+
+  // Get today for highlighting
+  var todayStr = new Date().toISOString().slice(0,10);
+  var dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
+  var todayDay = dayNames[new Date().getDay()];
+
+  // Build table
+  var rows = sortedWeeks.map(function(w, idx) {
+    var days = ['mon','tue','wed','thu','fri'];
+    var dayCells = days.map(function(d) {
+      var val = w[d];
+      var date = w.dates[d];
+      var isToday = date === todayStr;
+      var cls = val ? (isToday ? 'day-val today' : 'day-val') : 'day-val empty';
+      var prevDay = days[days.indexOf(d)-1];
+      var prevVal = prevDay ? w[prevDay] : null;
+      var chg = '';
+      if (val && prevVal) {
+        var diff = val - prevVal;
+        chg = '<div style="font-size:10px;'+(diff>=0?'color:var(--green)':'color:var(--red)')+'">'+
+          (diff>=0?'+':'')+fmtGBP(diff)+'</div>';
+      }
+      return '<td class="'+cls+'">'+(val?fmtGBP(val):'—')+chg+'</td>';
+    }).join('');
+
+    // Week end value = last available day
+    var weekVals = days.map(function(d){ return w[d]; }).filter(Boolean);
+    var weekEnd = weekVals.length ? weekVals[weekVals.length-1] : null;
+    var weekStart = weekVals.length ? weekVals[0] : null;
+    var weekChg = (weekEnd && weekStart && weekEnd!==weekStart) ? weekEnd-weekStart : null;
+    var weekChgCls = weekChg>0?'pos':weekChg<0?'neg':'neu';
+
+    // Latest snapshot for baseline gain
+    var latestSnap = w.snapshots.sort(function(a,b){ return b.snapshot_date.localeCompare(a.snapshot_date); })[0];
+    var baselineGain = latestSnap ? (latestSnap.total_value + (latestSnap.cash_balance||0) - BASELINE) : null;
+    var baselineCls = baselineGain>0?'pos':'neg';
+
+    // Date range for this week
+    var allDates = Object.values(w.dates).sort();
+    var weekLabel = allDates.length ? fmtDateShort(allDates[0]) : 'Wk '+w.week;
+
+    var isCurrentWeek = idx===0 ? 'current-week' : '';
+
+    return '<tr class="'+isCurrentWeek+'">'+
+      '<td class="week-num">Wk '+w.week+'<div style="font-size:10px;color:var(--muted)">'+weekLabel+'</div></td>'+
+      dayCells+
+      '<td class="week-gain '+weekChgCls+'">'+(weekChg!=null?(weekChg>=0?'+':'')+fmtGBP(weekChg):'—')+'</td>'+
+      '<td class="baseline-gain '+baselineCls+'">'+(baselineGain!=null?(baselineGain>=0?'+':'')+fmtGBP(baselineGain):'—')+'</td>'+
+      '<td style="color:var(--muted);font-size:11px">'+(weekEnd?fmtGBP(weekEnd):'—')+'</td>'+
+    '</tr>';
+  }).join('');
+
+  document.getElementById('weekly-content').innerHTML =
+    '<div class="table-wrap"><table class="weekly-table">'+
+    '<thead><tr>'+
+      '<th>Week</th>'+
+      '<th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th>'+
+      '<th>Week +/-</th>'+
+      '<th>vs Baseline</th>'+
+      '<th>End Value</th>'+
+    '</tr></thead>'+
+    '<tbody>'+rows+'</tbody>'+
+    '</table></div>';
+}
+
+async function updateCash() {
+  var cash = parseFloat(document.getElementById('cash-input').value) || 0;
+  var today = new Date().toISOString().slice(0,10);
+  // Update the latest snapshot with new cash balance
+  var r = await _supa.from('portfolio_snapshots')
+    .update({ cash_balance: cash })
+    .eq('user_id', currentUser.id)
+    .eq('snapshot_date', today);
+  if (!r.error) {
+    alert('Cash balance updated to £'+cash.toLocaleString());
+  }
+}
+
+async function takeManualSnapshot() {
+  var btn = event.target;
+  btn.disabled = true;
+  btn.textContent = '📸 Taking snapshot...';
+  try {
+    var resp = await fetch('/api/snapshot?trigger=manual');
+    var result = await resp.json();
+    if (result.ok) {
+      btn.textContent = '✅ Saved!';
+      setTimeout(function(){ btn.textContent='📸 Snapshot Now'; btn.disabled=false; }, 2000);
+      loadWeeklyData();
+    } else {
+      btn.textContent = '❌ Failed';
+      setTimeout(function(){ btn.textContent='📸 Snapshot Now'; btn.disabled=false; }, 2000);
+    }
+  } catch(e) {
+    btn.textContent = '❌ Error';
+    setTimeout(function(){ btn.textContent='📸 Snapshot Now'; btn.disabled=false; }, 2000);
+  }
 }
 
 // ── HELPERS ──
