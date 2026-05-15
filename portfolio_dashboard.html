@@ -315,34 +315,35 @@ function calcPositions() {
   positions = {};
   allTrades.forEach(function(t) {
     var sym = t.symbol;
-    var currency = getCurrency(t.symbol);
+    var acct = t.account || '';
+    var key = sym + '|' + acct; // key by symbol+account to keep separate
+    var currency = getCurrency(sym);
     var shares = parseFloat(t.shares||0);
     var price = parseFloat(t.price||0);
     var priceGBP = toGBP(price, currency);
     var totalGBP = shares * priceGBP;
 
-    if (!positions[sym]) positions[sym] = {
+    if (!positions[key]) positions[key] = {
       symbol:sym, shares:0, costBasis:0,
-      account:t.account, currency:currency, trades:[]
+      account:acct, currency:currency, trades:[]
     };
-    positions[sym].trades.push(t);
-    positions[sym].currency = getCurrency(sym); // always from symbol
+    positions[key].trades.push(t);
 
     if (t.action && t.action.toLowerCase() === 'buy') {
-      positions[sym].shares += shares;
-      positions[sym].costBasis += totalGBP;
+      positions[key].shares += shares;
+      positions[key].costBasis += totalGBP;
     } else if (t.action && t.action.toLowerCase() === 'sell') {
-      var prevShares = positions[sym].shares;
+      var prevShares = positions[key].shares;
       if (prevShares > 0) {
         var pctSold = shares / prevShares;
-        positions[sym].costBasis -= positions[sym].costBasis * pctSold;
+        positions[key].costBasis -= positions[key].costBasis * pctSold;
       }
-      positions[sym].shares -= shares;
+      positions[key].shares -= shares;
     }
   });
-  // Remove closed positions
-  Object.keys(positions).forEach(function(sym) {
-    if (positions[sym].shares <= 0.001) delete positions[sym];
+  // Remove closed/empty positions
+  Object.keys(positions).forEach(function(key) {
+    if (positions[key].shares <= 0.001) delete positions[key];
   });
 }
 
@@ -575,12 +576,21 @@ function calcHistoryData() {
     var td = new Date(t.trade_date);
     if (td > startDate) return;
     var sym = t.symbol;
+    var currency = getCurrency(sym);
+    var tShares = parseFloat(t.shares||0);
+    var tPrice = parseFloat(t.price||0);
+    var tTotalGBP = tShares * toGBP(tPrice, currency);
     if (!runningPositions[sym]) runningPositions[sym] = {shares:0, costBasis:0};
     if (t.action && t.action.toLowerCase()==='buy') {
-      runningPositions[sym].shares += parseFloat(t.shares||0);
-      runningPositions[sym].costBasis += parseFloat(t.total||0);
+      runningPositions[sym].shares += tShares;
+      runningPositions[sym].costBasis += tTotalGBP;
     } else if (t.action && t.action.toLowerCase()==='sell') {
-      runningPositions[sym].shares -= parseFloat(t.shares||0);
+      var prev = runningPositions[sym].shares;
+      if (prev > 0) {
+        var pct = tShares / prev;
+        runningPositions[sym].costBasis -= runningPositions[sym].costBasis * pct;
+      }
+      runningPositions[sym].shares -= tShares;
       if (runningPositions[sym].shares <= 0) { runningPositions[sym].shares=0; runningPositions[sym].costBasis=0; }
     }
   });
@@ -607,11 +617,20 @@ function calcHistoryData() {
       tradesByDate[dateStr].forEach(function(t) {
         var sym = t.symbol;
         if (!runningPositions[sym]) runningPositions[sym]={shares:0,costBasis:0};
+        var currency = getCurrency(sym);
+        var tShares = parseFloat(t.shares||0);
+        var tPrice = parseFloat(t.price||0);
+        var tTotalGBP = tShares * toGBP(tPrice, currency);
         if (t.action && t.action.toLowerCase()==='buy') {
-          runningPositions[sym].shares += parseFloat(t.shares||0);
-          runningPositions[sym].costBasis += parseFloat(t.total||0);
+          runningPositions[sym].shares += tShares;
+          runningPositions[sym].costBasis += tTotalGBP;
         } else if (t.action && t.action.toLowerCase()==='sell') {
-          runningPositions[sym].shares -= parseFloat(t.shares||0);
+          var prev = runningPositions[sym].shares;
+          if (prev > 0) {
+            var pct = tShares / prev;
+            runningPositions[sym].costBasis -= runningPositions[sym].costBasis * pct;
+          }
+          runningPositions[sym].shares -= tShares;
           if (runningPositions[sym].shares <= 0) {runningPositions[sym].shares=0;runningPositions[sym].costBasis=0;}
         }
       });
@@ -622,8 +641,10 @@ function calcHistoryData() {
     Object.keys(runningPositions).forEach(function(sym) {
       var pos = runningPositions[sym];
       if (pos.shares <= 0) return;
-      var price = priceCache[sym] && priceCache[sym].price;
-      if (price) totalVal += price * pos.shares;
+      var currency = getCurrency(sym);
+      var rawPrice = priceCache[sym] && priceCache[sym].price;
+      var priceGBP = rawPrice ? toGBP(rawPrice, currency) : 0;
+      if (priceGBP) totalVal += priceGBP * pos.shares;
       totalCost += pos.costBasis;
     });
 
