@@ -351,16 +351,30 @@ async function refreshPrices() {
   var btn = document.getElementById('refresh-btn');
   btn.classList.add('spinning');
   setStatus('loading');
-  var symbols = Object.keys(positions);
+  // Extract unique symbols from position keys (keys are "SYMBOL|ACCOUNT")
+  var symSet = {};
+  Object.keys(positions).forEach(function(key){ symSet[positions[key].symbol] = true; });
+  var symbols = Object.keys(symSet);
   if (!symbols.length) { btn.classList.remove('spinning'); setStatus('ok'); return; }
+  console.log('Fetching prices for:', symbols.join(','));
   try {
     var resp = await fetch('/api/prices?symbols='+symbols.join(','), {signal:AbortSignal.timeout(15000)});
     var result = await resp.json();
+    console.log('API response ok:', result.ok, 'symbols returned:', Object.keys(result.data||{}).length);
     if (result.ok) {
       Object.keys(result.data).forEach(function(sym){ priceCache[sym] = result.data[sym]; });
+      console.log('priceCache keys:', Object.keys(priceCache));
       setStatus('ok');
-    } else { setStatus('error'); }
-  } catch(e) { setStatus('error'); }
+    } else {
+      console.error('API error:', result.error);
+      setStatus('error');
+    }
+  } catch(e) {
+    console.error('Fetch failed:', e.message);
+    setStatus('error');
+  }
+  console.log('positions keys sample:', Object.keys(positions).slice(0,3));
+  console.log('positions[0] symbol:', Object.values(positions)[0] && Object.values(positions)[0].symbol);
   btn.classList.remove('spinning');
   renderSummary();
   renderHoldings();
