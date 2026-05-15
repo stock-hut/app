@@ -299,11 +299,10 @@ async function loadTrades() {
 
 var FX_USD_GBP = 0.746; // 1 USD = £0.746 (update periodically)
 
-function getCurrency(notes) {
-  if (!notes) return 'USD';
-  if (notes.startsWith('GBX|') || notes.startsWith('GBX ')) return 'GBX';
-  if (notes.startsWith('USD|') || notes.startsWith('USD ')) return 'USD';
-  return 'USD';
+function getCurrency(symbol) {
+  // Detect currency from ticker symbol — most reliable approach
+  if (symbol && symbol.endsWith('.L')) return 'GBX';  // London = pence
+  return 'USD';  // everything else = USD
 }
 
 function toGBP(amount, currency) {
@@ -316,7 +315,7 @@ function calcPositions() {
   positions = {};
   allTrades.forEach(function(t) {
     var sym = t.symbol;
-    var currency = getCurrency(t.notes);
+    var currency = getCurrency(t.symbol);
     var shares = parseFloat(t.shares||0);
     var price = parseFloat(t.price||0);
     var priceGBP = toGBP(price, currency);
@@ -327,7 +326,7 @@ function calcPositions() {
       account:t.account, currency:currency, trades:[]
     };
     positions[sym].trades.push(t);
-    positions[sym].currency = currency; // use last known currency
+    positions[sym].currency = getCurrency(sym); // always from symbol
 
     if (t.action && t.action.toLowerCase() === 'buy') {
       positions[sym].shares += shares;
