@@ -297,19 +297,48 @@ async function loadTrades() {
   await refreshPrices();
 }
 
+var FX_USD_GBP = 0.746; // 1 USD = £0.746 (update periodically)
+
+function getCurrency(notes) {
+  if (!notes) return 'USD';
+  if (notes.startsWith('GBX|') || notes.startsWith('GBX ')) return 'GBX';
+  if (notes.startsWith('USD|') || notes.startsWith('USD ')) return 'USD';
+  return 'USD';
+}
+
+function toGBP(amount, currency) {
+  if (currency === 'GBX') return amount / 100;  // pence to pounds
+  if (currency === 'USD') return amount * FX_USD_GBP;  // USD to GBP
+  return amount;  // already GBP
+}
+
 function calcPositions() {
   positions = {};
   allTrades.forEach(function(t) {
     var sym = t.symbol;
-    if (!positions[sym]) positions[sym] = {symbol:sym, shares:0, costBasis:0, account:t.account, trades:[]};
+    var currency = getCurrency(t.notes);
+    var shares = parseFloat(t.shares||0);
+    var price = parseFloat(t.price||0);
+    var priceGBP = toGBP(price, currency);
+    var totalGBP = shares * priceGBP;
+
+    if (!positions[sym]) positions[sym] = {
+      symbol:sym, shares:0, costBasis:0,
+      account:t.account, currency:currency, trades:[]
+    };
     positions[sym].trades.push(t);
+    positions[sym].currency = currency; // use last known currency
+
     if (t.action && t.action.toLowerCase() === 'buy') {
-      positions[sym].shares += parseFloat(t.shares||0);
-      positions[sym].costBasis += parseFloat(t.total||0);
+      positions[sym].shares += shares;
+      positions[sym].costBasis += totalGBP;
     } else if (t.action && t.action.toLowerCase() === 'sell') {
-      positions[sym].shares -= parseFloat(t.shares||0);
-      var pctSold = parseFloat(t.shares||0) / (positions[sym].shares + parseFloat(t.shares||0));
-      positions[sym].costBasis -= positions[sym].costBasis * pctSold;
+      var prevShares = positions[sym].shares;
+      if (prevShares > 0) {
+        var pctSold = shares / prevShares;
+        positions[sym].costBasis -= positions[sym].costBasis * pctSold;
+      }
+      positions[sym].shares -= shares;
     }
   });
   // Remove closed positions
@@ -355,8 +384,9 @@ function renderSummary() {
   var accounts = new Set();
 
   Object.values(positions).forEach(function(p) {
-    var price = priceCache[p.symbol] && priceCache[p.symbol].price;
-    var value = price ? price * p.shares : 0;
+    var rawPrice = priceCache[p.symbol] && priceCache[p.symbol].price;
+    var priceGBP = rawPrice ? toGBP(rawPrice, p.currency) : 0;
+    var value = priceGBP ? priceGBP * p.shares : 0;
     var cost = p.costBasis;
     totalValue += value;
     totalCost += cost;
@@ -385,14 +415,17 @@ function renderHoldings() {
   var rows = Object.values(positions).filter(function(p){
     return activeAccount==='all' || p.account===activeAccount;
   }).map(function(p) {
-    var price = priceCache[p.symbol] && priceCache[p.symbol].price;
-    var value = price ? price*p.shares : null;
+    var rawPrice = priceCache[p.symbol] && priceCache[p.symbol].price;
+    // Convert live price to GBP based on currency
+    var priceGBP = rawPrice ? toGBP(rawPrice, p.currency) : null;
+    var value = priceGBP ? priceGBP*p.shares : null;
     var avgCost = p.shares > 0 ? p.costBasis/p.shares : 0;
     var pnl = value ? value-p.costBasis : null;
     var pnlPct = pnl && p.costBasis ? pnl/p.costBasis*100 : null;
     var pnlCls = pnl>0?'pos':pnl<0?'neg':'neu';
     var name = (priceCache[p.symbol] && priceCache[p.symbol].name) || p.symbol;
     var acctCls = 'acct-pill acct-'+(p.account||'GIA').split(' ')[0];
+    var price = priceGBP; // use GBP price for display
     return '<tr>'+
       '<td class="sym" onclick="openScreenerModal(\''+p.symbol+'\')">'+p.symbol+'</td>'+
       '<td class="soft">'+escH(name)+'</td>'+
